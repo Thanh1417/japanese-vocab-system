@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model accounts {
+  account_id Int      @id @default(autoincrement())
+  full_name  String   @db.VarChar(150)
+  email      String   @unique(map: "accounts_unique") @db.VarChar(150)
+  password   String   @db.VarChar(255)
+  role       String   @default("learner") @db.VarChar(50)
+  status     String   @default("active") @db.VarChar(50)
+  created_at DateTime @default(now()) @db.DateTime(0)
+}
+
+model lessons {
+  lesson_id   Int     @id @default(autoincrement())
+  lesson_name String  @db.VarChar(255)
+  jlpt_level  String  @db.VarChar(10)
+  total_words Int     @default(0)
+}

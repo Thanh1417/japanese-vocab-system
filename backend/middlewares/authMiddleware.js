@@ -17,7 +17,7 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (error) {
     return res.status(403).json({
-      message: "Token khong hop le!",
+      message: "Token khong hop le hoac da het han!",
     });
   }
 };

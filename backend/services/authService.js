@@ -15,7 +15,13 @@ const register = async (full_name, email, password) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  await accountRepository.createAccount(full_name, email, hashedPassword);
+  await accountRepository.createAccount({
+    full_name: full_name,
+    email: email,
+    password: hashedPassword,
+    role: "learner",
+    status: "active",
+  });
 
   return {
     success: true,
