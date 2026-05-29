@@ -22,4 +22,20 @@ model lessons {
   lesson_name String  @db.VarChar(255)
   jlpt_level  String  @db.VarChar(10)
   total_words Int     @default(0)
+
+  vocabularies vocabularies[]
+}
+
+model vocabularies {
+  vocabulary_id      Int     @id @default(autoincrement())
+  lesson_id          Int
+  word               String  @db.VarChar(100)
+  reading            String? @db.VarChar(100)
+  kanji_meaning      String? @db.VarChar(100)
+  vietnamese_meaning String  @db.VarChar(255)
+  example_sentence   String? @db.VarChar(255)
+  audio_url          String? @db.VarChar(255)
+  jlpt_level         String  @db.VarChar(10)
+
+  lesson lessons @relation(fields: [lesson_id], references: [lesson_id])
 }
