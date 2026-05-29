@@ -6,18 +6,21 @@ const app = express();
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const lessonRoutes = require("./routes/lessonRoutes");
 const vocabularyRoutes = require("./routes/vocabularyRoutes");
+const questionRoutes = require("./routes/questionRoutes");
 
 
 app.use(express.json());
 
-app.use("/api/accounts", accountRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/accounts", accountRoutes);
 app.use(errorMiddleware);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/vocabularies", vocabularyRoutes);
+app.use("/api/questions", questionRoutes);
 
 const PORT = 3000;
 
 app.listen(PORT, () => {
   console.log(`Server dang chay tai cong ${PORT}`);
 });
+

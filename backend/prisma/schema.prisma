@@ -38,4 +38,16 @@ model vocabularies {
   jlpt_level         String  @db.VarChar(10)
 
   lesson lessons @relation(fields: [lesson_id], references: [lesson_id])
+
+  questions questions[]
+}
+
+model questions {
+  question_id    Int     @id @default(autoincrement())
+  vocabulary_id  Int
+  content        String  @db.VarChar(255)
+  question_type  String  @db.VarChar(50)
+  correct_answer String  @db.VarChar(255)
+
+  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id])
 }
