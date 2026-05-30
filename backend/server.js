@@ -7,6 +7,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const lessonRoutes = require("./routes/lessonRoutes");
 const vocabularyRoutes = require("./routes/vocabularyRoutes");
 const questionRoutes = require("./routes/questionRoutes");
+const favoriteRoutes = require("./routes/favoriteRoutes");
 
 
 app.use(express.json());
@@ -17,6 +18,7 @@ app.use(errorMiddleware);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/vocabularies", vocabularyRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/favorites", favoriteRoutes);
 
 const PORT = 3000;
 
