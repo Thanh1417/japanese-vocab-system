@@ -18,6 +18,7 @@ model accounts {
 
   favorite_vocabularies favorite_vocabularies[]
   study_sessions study_sessions[]
+  vocabulary_progress vocabulary_progress[]
 
 }
 
@@ -46,6 +47,7 @@ model vocabularies {
   questions questions[]
 
   favorite_vocabularies favorite_vocabularies[]
+  vocabulary_progress vocabulary_progress[]
 }
 
 model questions {
@@ -94,4 +96,22 @@ model question_results {
 
   session  study_sessions @relation(fields: [session_id], references: [session_id])
   question questions       @relation(fields: [question_id], references: [question_id])
+}
+
+model vocabulary_progress {
+  progress_id      Int       @id @default(autoincrement())
+  account_id       Int
+  vocabulary_id    Int
+
+  repetition_count Int       @default(0)
+  ease_factor      Float     @default(2.5)
+  interval_days    Int       @default(1)
+
+  last_reviewed_at DateTime?
+  next_review_at   DateTime?
+
+  account    accounts     @relation(fields: [account_id], references: [account_id])
+  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id])
+
+  @@unique([account_id, vocabulary_id])
 }

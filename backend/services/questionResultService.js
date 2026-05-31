@@ -1,6 +1,7 @@
 const questionResultRepository = require("../repositories/questionResultRepository");
 const questionRepository = require("../repositories/questionRepository");
 const studySessionRepository = require("../repositories/studySessionRepository");
+const srsService = require("./srsService");
 
 const createQuestionResult = async (data) => {
   const session = await studySessionRepository.findStudySessionById(
@@ -33,6 +34,12 @@ const createQuestionResult = async (data) => {
     user_answer: data.user_answer,
     is_correct: isCorrect,
   });
+
+  await srsService.updateVocabularyProgress(
+    session.account_id,
+    question.vocabulary_id,
+    isCorrect
+  );
 
   return {
     success: true,
