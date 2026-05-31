@@ -12,6 +12,7 @@ const studySessionRoutes = require("./routes/studySessionRoutes");
 const questionResultRoutes = require("./routes/questionResultRoutes");
 const srsRoutes = require("./routes/srsRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 
 app.use(express.json());
@@ -27,6 +28,7 @@ app.use("/api/study-sessions", studySessionRoutes);
 app.use("/api/question-results", questionResultRoutes);
 app.use("/api/srs", srsRoutes);
 app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 const PORT = 3000;
