@@ -1,19 +1,18 @@
 import { useAuth } from "../contexts/AuthContext";
+import MainLayout from "../layouts/MainLayout";
 
-function Dashboard() {
-  const { user, logout } = useAuth();
+function DashboardPage() {
+  const { user } = useAuth();
 
   return (
-    <div>
+    <MainLayout>
       <h1>Dashboard</h1>
 
       <p>Xin chào: {user?.full_name}</p>
       <p>Email: {user?.email}</p>
       <p>Vai trò: {user?.role}</p>
-
-      <button onClick={logout}>Đăng xuất</button>
-    </div>
+    </MainLayout>
   );
 }
 
-export default Dashboard;
+export default DashboardPage;
