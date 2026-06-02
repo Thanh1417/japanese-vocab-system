@@ -1,38 +1,44 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginApi } from "../api/authApi";
+import { useAuth } from "../contexts/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("login@test.com");
   const [password, setPassword] = useState("123456");
   const [message, setMessage] = useState("");
 
-  const handleLogin = async (e) => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await loginApi({ email, password });
+      const res = await loginApi({
+        email,
+        password,
+      });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      login({
+        token: res.data.token,
+        user: res.data.user,
+      });
 
-      setMessage("Đăng nhập thành công!");
+      setMessage("Đăng nhập thành công");
+      navigate("/dashboard");
     } catch (error) {
-        console.log("LOGIN ERROR:", error);
-        console.log("ERROR RESPONSE:", error.response);
-
-        setMessage(
-            error.response?.data?.message ||
-            error.message ||
-            "Đăng nhập thất bại!"
-        );
+      setMessage(
+        error.response?.data?.message || "Đăng nhập thất bại"
+      );
     }
   };
 
   return (
     <div>
-      <h1>Đăng nhập</h1>
+      <h2>Đăng nhập</h2>
 
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleSubmit}>
         <div>
           <label>Email</label>
           <input
