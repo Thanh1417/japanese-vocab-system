@@ -1,8 +1,13 @@
+const cors = require("cors");
+
 const express = require("express");
 
 const authRoutes = require("./routes/authRoutes");
 const accountRoutes = require("./routes/accountRoutes");
 const app = express();
+app.use(cors());
+app.use(express.json());
+
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const lessonRoutes = require("./routes/lessonRoutes");
 const vocabularyRoutes = require("./routes/vocabularyRoutes");
