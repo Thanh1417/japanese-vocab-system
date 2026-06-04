@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import MainLayout from "../../layouts/MainLayout";
+import MainLayout from "../../../layouts/MainLayout";
 import {
   createLessonApi,
   deleteLessonApi,
   getAllLessonsApi,
   updateLessonApi,
-} from "../../api/lessonApi";
+} from "../../../api/lessonApi";
 
 function LessonListPage() {
   const [lessons, setLessons] = useState([]);

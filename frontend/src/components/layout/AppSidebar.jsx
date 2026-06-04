@@ -41,6 +41,7 @@ function AppSidebar() {
             <Link to="/quiz">Luyện tập</Link>
             <Link to="/favorites">Yêu thích</Link>
             <Link to="/study-sessions">Phiên học</Link>
+            <Link to="/srs-review">Ôn tập SRS</Link>
           </>
         )}
       </nav>
