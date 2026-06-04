@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 function AppSidebar() {
+  const { user } = useAuth();
+
   return (
     <aside
       style={{
@@ -22,11 +25,24 @@ function AppSidebar() {
         }}
       >
         <Link to="/dashboard">Dashboard</Link>
-        <Link to="/lessons">Bài học</Link>
-        <Link to="/vocabularies">Từ vựng</Link>
-        <Link to="/questions">Câu hỏi</Link>
-        <Link to="/favorites">Yêu thích</Link>
-        <Link to="/study-sessions">Phiên học</Link>
+
+        {user?.role === "admin" && (
+          <>
+            <Link to="/admin/lessons">Quản lý bài học</Link>
+            <Link to="/admin/vocabularies">Quản lý từ vựng</Link>
+            <Link to="/admin/questions">Quản lý câu hỏi</Link>
+            <Link to="/admin/accounts">Quản lý tài khoản</Link>
+          </>
+        )}
+
+        {user?.role === "learner" && (
+          <>
+            <Link to="/vocabularies">Từ vựng</Link>
+            <Link to="/quiz">Luyện tập</Link>
+            <Link to="/favorites">Yêu thích</Link>
+            <Link to="/study-sessions">Phiên học</Link>
+          </>
+        )}
       </nav>
     </aside>
   );
