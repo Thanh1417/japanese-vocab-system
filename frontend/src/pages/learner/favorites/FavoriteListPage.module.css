@@ -1,0 +1,46 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.tableWrapper {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 14px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.table td {
+  padding: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.deleteButton {
+  padding: 8px 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  opacity: 0.9;
+}

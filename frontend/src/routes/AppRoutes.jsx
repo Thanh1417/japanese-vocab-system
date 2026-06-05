@@ -7,6 +7,10 @@ import Dashboard from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
+import FavoriteListPage from "../pages/learner/favorites/FavoriteListPage";
+
+
+
 
 function AppRoutes() {
     return (
@@ -42,14 +46,14 @@ function AppRoutes() {
                 }
             />
 
-            {/* <Route
-        path="/lessons"
-        element={
-            <ProtectedRoute>
-            <LessonListPage />
-            </ProtectedRoute>
-        }
-      /> */}
+            <Route
+                path="/favorites"
+                element={
+                    <ProtectedRoute>
+                        <FavoriteListPage />
+                    </ProtectedRoute>
+                }
+            />
         </Routes>
     );
 }
