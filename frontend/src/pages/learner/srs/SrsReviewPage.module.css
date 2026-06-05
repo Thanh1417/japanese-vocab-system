@@ -1,0 +1,57 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.reviewCard {
+  background: var(--color-white);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  max-width: 600px;
+}
+
+.progress {
+  color: var(--color-muted);
+}
+
+.word {
+  font-size: 48px;
+  margin: 16px 0;
+}
+
+.info {
+  margin: 8px 0;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.showButton {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.wrongButton {
+  background: #ef4444;
+  color: white;
+}
+
+.correctButton {
+  background: #22c55e;
+  color: white;
+}
