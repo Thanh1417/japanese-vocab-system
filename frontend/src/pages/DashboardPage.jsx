@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { getDashboardOverviewApi } from "../api/dashboardApi";
 import DashboardCard from "../components/common/DashboardCard";
+import styles from "./DashboardPage.module.css";
 
 function DashboardPage() {
   const [overview, setOverview] = useState(null);
@@ -25,19 +26,12 @@ function DashboardPage() {
 
   return (
     <MainLayout>
-      <h1>Dashboard</h1>
+      <h1 className={styles.title}>Dashboard</h1>
 
-      {loading && <p>Đang tải...</p>}
+      {loading && <p className={styles.message}>Đang tải...</p>}
 
       {overview && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "20px",
-            marginTop: "20px",
-          }}
-        >
+        <div className={styles.cardGrid}>
           <DashboardCard
             title="Tổng phiên học"
             value={overview.total_sessions}
