@@ -6,6 +6,9 @@ function VocabularyListPage() {
   const [vocabularies, setVocabularies] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [keyword, setKeyword] = useState("");
+  const [jlptLevel, setJlptLevel] = useState("");
+
   const fetchVocabularies = async () => {
     try {
       const res = await getAllVocabulariesApi();
@@ -22,11 +25,60 @@ function VocabularyListPage() {
     fetchVocabularies();
   }, []);
 
+  const filteredVocabularies = vocabularies.filter((vocab) => {
+    const matchKeyword =
+      vocab.word?.toLowerCase().includes(keyword.toLowerCase()) ||
+      vocab.reading?.toLowerCase().includes(keyword.toLowerCase()) ||
+      vocab.vietnamese_meaning
+        ?.toLowerCase()
+        .includes(keyword.toLowerCase());
+
+    const matchLevel = jlptLevel ? vocab.jlpt_level === jlptLevel : true;
+
+    return matchKeyword && matchLevel;
+  });
+
   return (
     <MainLayout>
       <h1>Danh sách từ vựng</h1>
 
+      <div
+        style={{
+          background: "white",
+          padding: "16px",
+          borderRadius: "12px",
+          marginBottom: "20px",
+          display: "flex",
+          gap: "12px",
+        }}
+      >
+        <input
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="Tìm từ, cách đọc hoặc nghĩa..."
+          style={{ flex: 1 }}
+        />
+
+        <select
+          value={jlptLevel}
+          onChange={(e) => setJlptLevel(e.target.value)}
+        >
+          <option value="">Tất cả cấp độ</option>
+          <option value="N5">N5</option>
+          <option value="N4">N4</option>
+          <option value="N3">N3</option>
+          <option value="N2">N2</option>
+          <option value="N1">N1</option>
+        </select>
+      </div>
+
       {loading && <p>Đang tải dữ liệu...</p>}
+
+      {!loading && (
+        <p>
+          Tìm thấy <strong>{filteredVocabularies.length}</strong> từ vựng
+        </p>
+      )}
 
       {!loading && (
         <div
@@ -36,7 +88,7 @@ function VocabularyListPage() {
             gap: "16px",
           }}
         >
-          {vocabularies.map((vocab) => (
+          {filteredVocabularies.map((vocab) => (
             <div
               key={vocab.vocabulary_id}
               style={{

@@ -1,29 +1,15 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import styles from "./AppSidebar.module.css";
 
 function AppSidebar() {
   const { user } = useAuth();
 
   return (
-    <aside
-      style={{
-        width: "220px",
-        background: "#1e293b",
-        color: "white",
-        minHeight: "100vh",
-        padding: "20px",
-      }}
-    >
-      <h2>JVocab</h2>
+    <aside className={styles.sidebar}>
+      <h2 className={styles.logo}>JVocab</h2>
 
-      <nav
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          marginTop: "30px",
-        }}
-      >
+      <nav className={styles.nav}>
         <Link to="/dashboard">Dashboard</Link>
 
         {user?.role === "admin" && (

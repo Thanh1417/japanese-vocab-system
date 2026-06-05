@@ -1,31 +1,16 @@
 import AppHeader from "../components/layout/AppHeader";
 import AppSidebar from "../components/layout/AppSidebar";
+import styles from "./MainLayout.module.css";
 
 function MainLayout({ children }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-      }}
-    >
+    <div className={styles.layout}>
       <AppSidebar />
 
-      <div
-        style={{
-          flex: 1,
-          background: "#f4f7fb",
-        }}
-      >
+      <div className={styles.main}>
         <AppHeader />
 
-        <main
-          style={{
-            padding: "20px",
-          }}
-        >
-          {children}
-        </main>
+        <main className={styles.content}>{children}</main>
       </div>
     </div>
   );

@@ -1,0 +1,27 @@
+.sidebar {
+  width: 220px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.logo {
+  margin: 0;
+  margin-bottom: 30px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav a {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+
+.nav a:hover {
+  background: #334155;
+}
