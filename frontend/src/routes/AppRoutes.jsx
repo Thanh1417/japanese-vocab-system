@@ -8,7 +8,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
 import FavoriteListPage from "../pages/learner/favorites/FavoriteListPage";
-
+import SrsReviewPage from "../pages/learner/srs/SrsReviewPage";
 
 
 
@@ -51,6 +51,14 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <FavoriteListPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/srs-review"
+                element={
+                    <ProtectedRoute>
+                        <SrsReviewPage />
                     </ProtectedRoute>
                 }
             />
