@@ -35,13 +35,21 @@ const calculateNextReview = (progress, isCorrect) => {
   };
 };
 
-const updateVocabularyProgress = async (account_id, vocabulary_id, isCorrect) => {
-  const existingProgress = await vocabularyProgressRepository.findProgress(
-    account_id,
-    vocabulary_id
-  );
+const updateVocabularyProgress = async (
+  account_id,
+  vocabulary_id,
+  isCorrect
+) => {
+  const existingProgress =
+    await vocabularyProgressRepository.findProgress(
+      account_id,
+      vocabulary_id
+    );
 
-  const newProgressData = calculateNextReview(existingProgress, isCorrect);
+  const newProgressData = calculateNextReview(
+    existingProgress,
+    isCorrect
+  );
 
   if (!existingProgress) {
     return await vocabularyProgressRepository.createProgress({
@@ -57,10 +65,30 @@ const updateVocabularyProgress = async (account_id, vocabulary_id, isCorrect) =>
   );
 };
 
-const getDueVocabularies = async (account_id) => {
-  const vocabularies = await vocabularyProgressRepository.getDueVocabularies(
-    account_id
+const reviewVocabulary = async (
+  account_id,
+  vocabulary_id,
+  is_correct
+) => {
+  const progress = await updateVocabularyProgress(
+    account_id,
+    vocabulary_id,
+    is_correct
   );
+
+  return {
+    success: true,
+    statusCode: 200,
+    message: "Cap nhat tien do on tap SRS thanh cong!",
+    data: progress,
+  };
+};
+
+const getDueVocabularies = async (account_id) => {
+  const vocabularies =
+    await vocabularyProgressRepository.getDueVocabularies(
+      account_id
+    );
 
   return {
     success: true,
@@ -73,5 +101,6 @@ const getDueVocabularies = async (account_id) => {
 module.exports = {
   calculateNextReview,
   updateVocabularyProgress,
+  reviewVocabulary,
   getDueVocabularies,
 };
