@@ -1,0 +1,48 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.tableWrapper {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #f8fafc;
+  padding: 14px;
+  text-align: left;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.table td {
+  padding: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.select {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.deleteButton {
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+}

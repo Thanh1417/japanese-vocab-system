@@ -9,6 +9,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyManagementPage from "../pages/admin/vocabularies/VocabularyManagementPage";
 import QuestionManagementPage from "../pages/admin/questions/QuestionManagementPage";
+import AccountManagementPage from "../pages/admin/accounts/AccountManagementPage";
 
 
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
@@ -58,6 +59,15 @@ function AppRoutes() {
                 element={
                     <AdminRoute>
                         <QuestionManagementPage />
+                    </AdminRoute>
+                }
+            />
+
+            <Route
+                path="/admin/accounts"
+                element={
+                    <AdminRoute>
+                        <AccountManagementPage />
                     </AdminRoute>
                 }
             />
