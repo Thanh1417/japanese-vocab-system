@@ -12,6 +12,7 @@ import SrsReviewPage from "../pages/learner/srs/SrsReviewPage";
 import QuizPage from "../pages/learner/quiz/QuizPage";
 import StudySessionListPage from "../pages/learner/studySessions/StudySessionListPage";
 import StudySessionDetailPage from "../pages/learner/studySessions/StudySessionDetailPage";
+import RecommendationPage from "../pages/learner/recommendations/RecommendationPage";
 
 
 function AppRoutes() {
@@ -88,6 +89,15 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <StudySessionDetailPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/recommendations"
+                element={
+                    <ProtectedRoute>
+                        <RecommendationPage />
                     </ProtectedRoute>
                 }
             />

@@ -1,0 +1,72 @@
+.title {
+  margin: 0 0 12px;
+  font-size: 32px;
+}
+
+.description {
+  max-width: 760px;
+  color: var(--color-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.card {
+  background: var(--color-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.word {
+  margin: 0;
+  font-size: 28px;
+}
+
+.level {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.info {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.example {
+  margin-top: 12px;
+  padding: 12px;
+  border-left: 4px solid var(--color-primary);
+  background: #f8fafc;
+  color: var(--color-muted);
+}
+
+.reasonBox {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: #fef3c7;
+  color: #92400e;
+  line-height: 1.5;
+}
