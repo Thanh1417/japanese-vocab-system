@@ -7,6 +7,9 @@ const verifyToken = require("../middlewares/authMiddleware");
 // Bắt đầu phiên học / làm quiz
 router.post("/start", verifyToken, studySessionController.startStudySession);
 
+// Xem danh sách phiên học của tôi
+router.get("/my", verifyToken, studySessionController.getMyStudySessions);
+
 // Xem chi tiết phiên học
 router.get("/:id", verifyToken, studySessionController.getStudySessionDetail);
 

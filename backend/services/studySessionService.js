@@ -32,6 +32,19 @@ const getStudySessionById = async (session_id) => {
   };
 };
 
+const getMyStudySessions = async (account_id) => {
+  const sessions =
+    await studySessionRepository.findStudySessionsByAccountId(account_id);
+
+  return {
+    success: true,
+    statusCode: 200,
+    message: "Lay lich su phien hoc thanh cong!",
+    data: sessions,
+  };
+};
+
+
 const endStudySession = async (session_id, data) => {
   const session = await studySessionRepository.findStudySessionById(session_id);
 
@@ -63,5 +76,6 @@ const endStudySession = async (session_id, data) => {
 module.exports = {
   startStudySession,
   getStudySessionById,
+  getMyStudySessions,
   endStudySession,
 };
