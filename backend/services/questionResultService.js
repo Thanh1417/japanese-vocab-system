@@ -26,7 +26,7 @@ const createQuestionResult = async (data) => {
     };
   }
 
-  const isCorrect = data.user_answer === question.correct_answer;
+    const isCorrect = data.user_answer.trim().toLowerCase() === question.correct_answer.trim().toLowerCase();
 
   const result = await questionResultRepository.createQuestionResult({
     session_id: Number(data.session_id),

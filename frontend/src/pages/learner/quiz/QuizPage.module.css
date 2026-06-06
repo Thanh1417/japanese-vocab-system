@@ -1,0 +1,53 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.quizCard {
+  background: var(--color-white);
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  max-width: 700px;
+}
+
+.progress {
+  color: var(--color-muted);
+}
+
+.question {
+  margin: 16px 0;
+  font-size: 24px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.actions {
+  margin-top: 20px;
+}
+
+.submitButton {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+}
+
+.resultCard {
+  background: var(--color-white);
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  max-width: 500px;
+}

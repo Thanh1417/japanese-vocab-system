@@ -1,104 +1,137 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../../layouts/MainLayout";
-import { getQuizQuestionsApi } from "../../../api/quizApi";
+import {
+    getQuizQuestionsApi,
+    startStudySessionApi,
+    endStudySessionApi,
+    createQuestionResultApi,
+} from "../../../api/quizApi";
+import styles from "./QuizPage.module.css";
+
 
 function QuizPage() {
-  const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+    const [questions, setQuestions] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState("");
+    const [showResult, setShowResult] = useState(false);
+    const [score, setScore] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [sessionId, setSessionId] = useState(null);
 
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [showResult, setShowResult] = useState(false);
+    const fetchQuizData = async () => {
+        try {
+            const sessionRes = await startStudySessionApi();
+            setSessionId(sessionRes.data.data.session_id);
 
-  const [score, setScore] = useState(0);
+            const questionRes = await getQuizQuestionsApi();
+            setQuestions(questionRes.data.data || questionRes.data);
+        } catch (error) {
+            console.log(error);
+            alert("Không thể tải dữ liệu quiz");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        fetchQuizData();
+    }, []);
 
-  const fetchQuestions = async () => {
-    try {
-      const res = await getQuizQuestionsApi();
+    const currentQuestion = questions[currentIndex];
 
-      setQuestions(res.data.data || res.data);
-    } catch (error) {
-      alert("Không thể tải câu hỏi");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleSubmitAnswer = async () => {
+        if (!selectedAnswer.trim()) {
+            alert("Hãy nhập đáp án");
+            return;
+        }
 
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
+        const isCorrect =
+            selectedAnswer.trim().toLowerCase() ===
+            currentQuestion.correct_answer.trim().toLowerCase();
 
-  const currentQuestion = questions[currentIndex];
+        const newScore = isCorrect ? score + 1 : score;
 
-  const handleSubmitAnswer = () => {
-    if (!selectedAnswer) {
-      alert("Hãy nhập đáp án");
-      return;
-    }
+        try {
+            await createQuestionResultApi({
+                session_id: sessionId,
+                question_id: currentQuestion.question_id,
+                user_answer: selectedAnswer,
+            });
+        } catch (error) {
+            console.log(error);
+            alert(error.response?.data?.message || "Không thể lưu kết quả câu hỏi");
+            return;
+        }
 
-    const isCorrect =
-      selectedAnswer.trim().toLowerCase() ===
-      currentQuestion.correct_answer.trim().toLowerCase();
+        if (isCorrect) {
+            setScore(newScore);
+        }
 
-    if (isCorrect) {
-      setScore((prev) => prev + 1);
-    }
+        const nextIndex = currentIndex + 1;
 
-    const nextIndex = currentIndex + 1;
+        if (nextIndex >= questions.length) {
+            if (sessionId) {
+                await endStudySessionApi(sessionId, {
+                    total_questions: questions.length,
+                    correct_answers: newScore,
+                });
+            }
 
-    if (nextIndex >= questions.length) {
-      setShowResult(true);
-      return;
-    }
+            setShowResult(true);
+            return;
+        }
 
-    setCurrentIndex(nextIndex);
-    setSelectedAnswer("");
-  };
+        setCurrentIndex(nextIndex);
+        setSelectedAnswer("");
+    };
 
-  return (
-    <MainLayout>
-      <h1>Luyện tập Quiz</h1>
+    return (
+        <MainLayout>
+            <h1 className={styles.title}>Luyện tập Quiz</h1>
 
-      {loading && <p>Đang tải câu hỏi...</p>}
+            {loading && <p className={styles.message}>Đang tải câu hỏi...</p>}
 
-      {!loading && questions.length === 0 && (
-        <p>Chưa có câu hỏi nào.</p>
-      )}
+            {!loading && questions.length === 0 && (
+                <p className={styles.message}>Chưa có câu hỏi nào.</p>
+            )}
 
-      {!loading && showResult && (
-        <div>
-          <h2>Hoàn thành Quiz</h2>
+            {!loading && showResult && (
+                <div className={styles.resultCard}>
+                    <h2>Hoàn thành Quiz</h2>
 
-          <p>
-            Điểm số: {score} / {questions.length}
-          </p>
-        </div>
-      )}
+                    <p>
+                        Điểm số: {score} / {questions.length}
+                    </p>
+                </div>
+            )}
 
-      {!loading && currentQuestion && !showResult && (
-        <div>
-          <p>
-            Câu {currentIndex + 1} / {questions.length}
-          </p>
+            {!loading && currentQuestion && !showResult && (
+                <div className={styles.quizCard}>
+                    <p className={styles.progress}>
+                        Câu {currentIndex + 1} / {questions.length}
+                    </p>
 
-          <h2>{currentQuestion.content}</h2>
+                    <h2 className={styles.question}>{currentQuestion.content}</h2>
 
-          <input
-            value={selectedAnswer}
-            onChange={(e) => setSelectedAnswer(e.target.value)}
-            placeholder="Nhập đáp án..."
-          />
+                    <input
+                        className={styles.input}
+                        value={selectedAnswer}
+                        onChange={(e) => setSelectedAnswer(e.target.value)}
+                        placeholder="Nhập đáp án..."
+                    />
 
-          <div style={{ marginTop: "20px" }}>
-            <button onClick={handleSubmitAnswer}>
-              Trả lời
-            </button>
-          </div>
-        </div>
-      )}
-    </MainLayout>
-  );
+                    <div className={styles.actions}>
+                        <button
+                            className={styles.submitButton}
+                            onClick={handleSubmitAnswer}
+                        >
+                            Trả lời
+                        </button>
+                    </div>
+                </div>
+            )}
+        </MainLayout>
+    );
 }
 
 export default QuizPage;
