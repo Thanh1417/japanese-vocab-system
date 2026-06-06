@@ -1,0 +1,117 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.form {
+  background: var(--color-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.formTitle {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.formGroup,
+.formGroupFull {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formGroup label,
+.formGroupFull label {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.formGroup input,
+.formGroup select,
+.formGroupFull textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.submitButton,
+.cancelButton,
+.editButton,
+.deleteButton {
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.submitButton {
+  padding: 10px 16px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.cancelButton {
+  padding: 10px 16px;
+  background: #e5e7eb;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.tableWrapper {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #f8fafc;
+  padding: 14px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.table td {
+  padding: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.editButton {
+  padding: 7px 10px;
+  background: #f59e0b;
+  color: white;
+  margin-right: 8px;
+}
+
+.deleteButton {
+  padding: 7px 10px;
+  background: #ef4444;
+  color: white;
+}

@@ -5,7 +5,11 @@ import AdminRoute from "./AdminRoute";
 import Login from "../pages/LoginPage";
 import Dashboard from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
+
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
+import VocabularyManagementPage from "../pages/admin/vocabularies/VocabularyManagementPage";
+
+
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
 import FavoriteListPage from "../pages/learner/favorites/FavoriteListPage";
 import SrsReviewPage from "../pages/learner/srs/SrsReviewPage";
@@ -13,7 +17,6 @@ import QuizPage from "../pages/learner/quiz/QuizPage";
 import StudySessionListPage from "../pages/learner/studySessions/StudySessionListPage";
 import StudySessionDetailPage from "../pages/learner/studySessions/StudySessionDetailPage";
 import RecommendationPage from "../pages/learner/recommendations/RecommendationPage";
-
 
 function AppRoutes() {
     return (
@@ -36,6 +39,15 @@ function AppRoutes() {
                 element={
                     <AdminRoute>
                         <LessonListPage />
+                    </AdminRoute>
+                }
+            />
+
+            <Route
+                path="/admin/vocabularies"
+                element={
+                    <AdminRoute>
+                        <VocabularyManagementPage />
                     </AdminRoute>
                 }
             />
