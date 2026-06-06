@@ -10,6 +10,7 @@ import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyManagementPage from "../pages/admin/vocabularies/VocabularyManagementPage";
 import QuestionManagementPage from "../pages/admin/questions/QuestionManagementPage";
 import AccountManagementPage from "../pages/admin/accounts/AccountManagementPage";
+import AdminDashboardPage from "../pages/admin/dashboard/AdminDashboardPage";
 
 
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
@@ -33,6 +34,15 @@ function AppRoutes() {
                     <ProtectedRoute>
                         <Dashboard />
                     </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/admin/dashboard"
+                element={
+                    <AdminRoute>
+                        <AdminDashboardPage />
+                    </AdminRoute>
                 }
             />
 

@@ -1,0 +1,14 @@
+.title {
+  margin: 0 0 20px;
+  font-size: 32px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
