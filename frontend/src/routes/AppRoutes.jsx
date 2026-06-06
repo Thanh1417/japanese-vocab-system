@@ -9,7 +9,7 @@ import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyListPage from "../pages/learner/vocabularies/VocabularyListPage";
 import FavoriteListPage from "../pages/learner/favorites/FavoriteListPage";
 import SrsReviewPage from "../pages/learner/srs/SrsReviewPage";
-
+import QuizPage from "../pages/learner/quiz/QuizPage";
 
 
 function AppRoutes() {
@@ -62,6 +62,17 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+
+            <Route
+                path="/quiz"
+                element={
+                    <ProtectedRoute>
+                        <QuizPage />
+                    </ProtectedRoute>
+                }
+            />
+
+
         </Routes>
     );
 }
