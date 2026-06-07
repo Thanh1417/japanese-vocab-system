@@ -1,10 +1,11 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import AdminRoute from "./AdminRoute";
 
 import Login from "../pages/LoginPage";
 import Dashboard from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
+import HomeRedirect from "./HomeRedirect";
 
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyManagementPage from "../pages/admin/vocabularies/VocabularyManagementPage";
@@ -24,7 +25,7 @@ import RecommendationPage from "../pages/learner/recommendations/RecommendationP
 function AppRoutes() {
     return (
         <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<HomeRedirect />} />
 
             <Route path="/login" element={<Login />} />
 

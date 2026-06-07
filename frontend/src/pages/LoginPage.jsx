@@ -20,17 +20,22 @@ function Login() {
         password,
       });
 
+      const user = res.data.user;
+
       login({
         token: res.data.token,
-        user: res.data.user,
+        user,
       });
 
       setMessage("Đăng nhập thành công");
-      navigate("/dashboard");
+
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
-      setMessage(
-        error.response?.data?.message || "Đăng nhập thất bại"
-      );
+      setMessage(error.response?.data?.message || "Đăng nhập thất bại");
     }
   };
 

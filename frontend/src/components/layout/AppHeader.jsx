@@ -1,8 +1,15 @@
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./AppHeader.module.css";
 
 function AppHeader() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className={styles.header}>
@@ -10,7 +17,8 @@ function AppHeader() {
 
       <div className={styles.userBox}>
         <span>{user?.full_name}</span>
-        <button className={styles.logoutButton} onClick={logout}>
+
+        <button className={styles.logoutButton} onClick={handleLogout}>
           Đăng xuất
         </button>
       </div>
