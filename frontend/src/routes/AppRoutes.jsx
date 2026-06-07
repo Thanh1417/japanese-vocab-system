@@ -1,9 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 
 import AdminRoute from "./AdminRoute";
+import GuestRoute from "./GuestRoute";
 
-import Login from "../pages/LoginPage";
-import Dashboard from "../pages/DashboardPage";
+import LoginPage from "../pages/LoginPage";
+import DashboardPage from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 import HomeRedirect from "./HomeRedirect";
 
@@ -27,13 +28,20 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<HomeRedirect />} />
 
-            <Route path="/login" element={<Login />} />
+            <Route
+                path="/login"
+                element={
+                    <GuestRoute>
+                        <LoginPage />
+                    </GuestRoute>
+                }
+            />
 
             <Route
                 path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <DashboardPage />
                     </ProtectedRoute>
                 }
             />
