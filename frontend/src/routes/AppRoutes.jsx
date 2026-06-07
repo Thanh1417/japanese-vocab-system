@@ -7,6 +7,8 @@ import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
 import HomeRedirect from "./HomeRedirect";
+import NotFoundPage from "../pages/NotFoundPage";
+
 
 import LessonListPage from "../pages/admin/lessons/LessonListPage";
 import VocabularyManagementPage from "../pages/admin/vocabularies/VocabularyManagementPage";
@@ -152,6 +154,8 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+
+            <Route path="*" element={<NotFoundPage />} />
 
 
         </Routes>
