@@ -4,19 +4,24 @@ import {
   getMyFavoritesApi,
   removeFavoriteVocabularyApi,
 } from "../../../api/favoriteApi";
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
 import styles from "./FavoriteListPage.module.css";
-
 
 function FavoriteListPage() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchFavorites = async () => {
     try {
+      setError("");
       const res = await getMyFavoritesApi();
       setFavorites(res.data.data || res.data);
     } catch (error) {
-      alert(error.response?.data?.message || "Không thể tải danh sách yêu thích");
+      setError(
+        error.response?.data?.message || "Không thể tải danh sách yêu thích"
+      );
     } finally {
       setLoading(false);
     }
@@ -28,11 +33,11 @@ function FavoriteListPage() {
     }
 
     try {
+      setError("");
       await removeFavoriteVocabularyApi(vocabularyId);
-      alert("Đã xoá khỏi yêu thích");
       fetchFavorites();
     } catch (error) {
-      alert(error.response?.data?.message || "Xoá yêu thích thất bại");
+      setError(error.response?.data?.message || "Xoá yêu thích thất bại");
     }
   };
 
@@ -42,56 +47,58 @@ function FavoriteListPage() {
 
   return (
     <MainLayout>
-        <h1 className={styles.title}>Từ vựng yêu thích</h1>
+      <h1 className={styles.title}>Từ vựng yêu thích</h1>
 
-        {loading && <p className={styles.message}>Đang tải dữ liệu...</p>}
+      <ErrorMessage message={error} />
 
-        {!loading && favorites.length === 0 && (
+      {loading && <LoadingMessage />}
+
+      {!loading && !error && favorites.length === 0 && (
         <p className={styles.message}>Bạn chưa có từ vựng yêu thích nào.</p>
-        )}
+      )}
 
-        {!loading && favorites.length > 0 && (
+      {!loading && !error && favorites.length > 0 && (
         <div className={styles.tableWrapper}>
-            <table className={styles.table}>
+          <table className={styles.table}>
             <thead>
-                <tr>
+              <tr>
                 <th>Từ vựng</th>
                 <th>Cách đọc</th>
                 <th>Nghĩa tiếng Việt</th>
                 <th>JLPT</th>
                 <th>Thao tác</th>
-                </tr>
+              </tr>
             </thead>
 
             <tbody>
-                {favorites.map((item) => {
+              {favorites.map((item) => {
                 const vocab = item.vocabulary || item;
 
                 return (
-                    <tr key={vocab.vocabulary_id}>
+                  <tr key={vocab.vocabulary_id}>
                     <td>{vocab.word}</td>
                     <td>{vocab.reading}</td>
                     <td>{vocab.vietnamese_meaning}</td>
                     <td>{vocab.jlpt_level}</td>
                     <td>
-                        <button
+                      <button
                         className={styles.deleteButton}
                         onClick={() =>
-                            handleRemoveFavorite(vocab.vocabulary_id)
+                          handleRemoveFavorite(vocab.vocabulary_id)
                         }
-                        >
+                      >
                         Xoá khỏi yêu thích
-                        </button>
+                      </button>
                     </td>
-                    </tr>
+                  </tr>
                 );
-                })}
+              })}
             </tbody>
-            </table>
+          </table>
         </div>
-        )}
+      )}
     </MainLayout>
-    );
+  );
 }
 
 export default FavoriteListPage;

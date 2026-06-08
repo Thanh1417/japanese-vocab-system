@@ -2,18 +2,24 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "../../../layouts/MainLayout";
 import { getMyStudySessionsApi } from "../../../api/studySessionApi";
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
 import styles from "./StudySessionListPage.module.css";
 
 function StudySessionListPage() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchSessions = async () => {
     try {
+      setError("");
       const res = await getMyStudySessionsApi();
       setSessions(res.data.data || res.data);
     } catch (error) {
-      alert("Không thể tải lịch sử phiên học");
+      setError(
+        error.response?.data?.message || "Không thể tải lịch sử phiên học"
+      );
     } finally {
       setLoading(false);
     }
@@ -27,13 +33,15 @@ function StudySessionListPage() {
     <MainLayout>
       <h1 className={styles.title}>Lịch sử học tập</h1>
 
-      {loading && <p className={styles.message}>Đang tải dữ liệu...</p>}
+      <ErrorMessage message={error} />
 
-      {!loading && sessions.length === 0 && (
+      {loading && <LoadingMessage />}
+
+      {!loading && !error && sessions.length === 0 && (
         <p className={styles.message}>Bạn chưa có phiên học nào.</p>
       )}
 
-      {!loading && sessions.length > 0 && (
+      {!loading && !error && sessions.length > 0 && (
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
             <thead>

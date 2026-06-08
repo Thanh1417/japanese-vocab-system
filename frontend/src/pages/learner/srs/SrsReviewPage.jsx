@@ -1,122 +1,134 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../../layouts/MainLayout";
 import {
-    getDueSrsVocabulariesApi,
-    submitSrsReviewApi,
+  getDueSrsVocabulariesApi,
+  submitSrsReviewApi,
 } from "../../../api/srsApi";
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
 import styles from "./SrsReviewPage.module.css";
 
 function SrsReviewPage() {
-    const [items, setItems] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [showMeaning, setShowMeaning] = useState(false);
-    const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showMeaning, setShowMeaning] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    const fetchDueVocabularies = async () => {
-        try {
-            const res = await getDueSrsVocabulariesApi();
-            setItems(res.data.data || res.data);
-        } catch (error) {
-            alert(error.response?.data?.message || "Không thể tải danh sách ôn tập");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchDueVocabularies = async () => {
+    try {
+      setError("");
+      const res = await getDueSrsVocabulariesApi();
+      setItems(res.data.data || res.data);
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Không thể tải danh sách ôn tập"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleSubmitReview = async (isCorrect) => {
-        const currentItem = items[currentIndex];
-        const vocab = currentItem.vocabulary || currentItem;
-
-        try {
-            await submitSrsReviewApi({
-                vocabulary_id: vocab.vocabulary_id,
-                is_correct: isCorrect,
-            });
-
-            setShowMeaning(false);
-            setCurrentIndex((prev) => prev + 1);
-        } catch (error) {
-            alert(error.response?.data?.message || "Không thể lưu kết quả ôn tập");
-        }
-    };
-
-    useEffect(() => {
-        fetchDueVocabularies();
-    }, []);
-
+  const handleSubmitReview = async (isCorrect) => {
     const currentItem = items[currentIndex];
-    const currentVocab = currentItem?.vocabulary || currentItem;
-    const isFinished = !loading && currentIndex >= items.length;
+    const vocab = currentItem.vocabulary || currentItem;
 
-    return (
-        <MainLayout>
-            <h1 className={styles.title}>Ôn tập SRS</h1>
+    try {
+      setError("");
 
-            {loading && <p className={styles.message}>Đang tải dữ liệu...</p>}
+      await submitSrsReviewApi({
+        vocabulary_id: vocab.vocabulary_id,
+        is_correct: isCorrect,
+      });
 
-            {!loading && items.length === 0 && (
-                <p className={styles.message}>
-                    Hôm nay bạn chưa có từ vựng nào cần ôn.
-                </p>
-            )}
+      setShowMeaning(false);
+      setCurrentIndex((prev) => prev + 1);
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Không thể lưu kết quả ôn tập"
+      );
+    }
+  };
 
-            {isFinished && items.length > 0 && (
-                <div className={styles.reviewCard}>
-                    <h2>Hoàn thành ôn tập</h2>
-                    <p>Bạn đã ôn xong {items.length} từ vựng hôm nay.</p>
-                </div>
-            )}
+  useEffect(() => {
+    fetchDueVocabularies();
+  }, []);
 
-            {!loading && currentVocab && !isFinished && (
-                <div className={styles.reviewCard}>
-                    <p className={styles.progress}>
-                        Từ {currentIndex + 1} / {items.length}
-                    </p>
+  const currentItem = items[currentIndex];
+  const currentVocab = currentItem?.vocabulary || currentItem;
+  const isFinished = !loading && currentIndex >= items.length;
 
-                    <h2 className={styles.word}>{currentVocab.word}</h2>
+  return (
+    <MainLayout>
+      <h1 className={styles.title}>Ôn tập SRS</h1>
 
-                    <p className={styles.info}>Cách đọc: {currentVocab.reading}</p>
+      <ErrorMessage message={error} />
 
-                    {!showMeaning && (
-                        <button
-                            className={`${styles.button} ${styles.showButton}`}
-                            onClick={() => setShowMeaning(true)}
-                        >
-                            Hiện nghĩa
-                        </button>
-                    )}
+      {loading && <LoadingMessage text="Đang tải dữ liệu ôn tập..." />}
 
-                    {showMeaning && (
-                        <>
-                            <p className={styles.info}>
-                                Nghĩa: {currentVocab.vietnamese_meaning}
-                            </p>
+      {!loading && !error && items.length === 0 && (
+        <p className={styles.message}>
+          Hôm nay bạn chưa có từ vựng nào cần ôn.
+        </p>
+      )}
 
-                            <p className={styles.info}>
-                                Ví dụ: {currentVocab.example_sentence}
-                            </p>
+      {isFinished && items.length > 0 && (
+        <div className={styles.reviewCard}>
+          <h2>Hoàn thành ôn tập</h2>
+          <p>Bạn đã ôn xong {items.length} từ vựng hôm nay.</p>
+        </div>
+      )}
 
-                            <div className={styles.actions}>
-                                <button
-                                    className={`${styles.button} ${styles.wrongButton}`}
-                                    onClick={() => handleSubmitReview(false)}
-                                >
-                                    Sai
-                                </button>
+      {!loading && currentVocab && !isFinished && (
+        <div className={styles.reviewCard}>
+          <p className={styles.progress}>
+            Từ {currentIndex + 1} / {items.length}
+          </p>
 
-                                <button
-                                    className={`${styles.button} ${styles.correctButton}`}
-                                    onClick={() => handleSubmitReview(true)}
-                                >
-                                    Đúng
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
-            )}
-        </MainLayout>
-    );
+          <h2 className={styles.word}>{currentVocab.word}</h2>
+
+          <p className={styles.info}>Cách đọc: {currentVocab.reading}</p>
+
+          {!showMeaning && (
+            <button
+              className={`${styles.button} ${styles.showButton}`}
+              onClick={() => setShowMeaning(true)}
+            >
+              Hiện nghĩa
+            </button>
+          )}
+
+          {showMeaning && (
+            <>
+              <p className={styles.info}>
+                Nghĩa: {currentVocab.vietnamese_meaning}
+              </p>
+
+              <p className={styles.info}>
+                Ví dụ: {currentVocab.example_sentence || "Chưa có ví dụ"}
+              </p>
+
+              <div className={styles.actions}>
+                <button
+                  className={`${styles.button} ${styles.wrongButton}`}
+                  onClick={() => handleSubmitReview(false)}
+                >
+                  Sai
+                </button>
+
+                <button
+                  className={`${styles.button} ${styles.correctButton}`}
+                  onClick={() => handleSubmitReview(true)}
+                >
+                  Đúng
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </MainLayout>
+  );
 }
 
 export default SrsReviewPage;
