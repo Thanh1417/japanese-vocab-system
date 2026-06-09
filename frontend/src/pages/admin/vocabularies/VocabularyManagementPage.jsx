@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../../layouts/MainLayout";
+
 import {
   createVocabularyApi,
   deleteVocabularyApi,
   getAllVocabulariesApi,
   updateVocabularyApi,
 } from "../../../api/vocabularyApi";
+
 import { getAllLessonsApi } from "../../../api/lessonApi";
+
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
+
 import styles from "./VocabularyManagementPage.module.css";
 
 function VocabularyManagementPage() {
   const [vocabularies, setVocabularies] = useState([]);
   const [lessons, setLessons] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [editingId, setEditingId] = useState(null);
 
@@ -29,15 +39,21 @@ function VocabularyManagementPage() {
 
   const fetchData = async () => {
     try {
+      setError("");
+
       const [vocabularyRes, lessonRes] = await Promise.all([
         getAllVocabulariesApi(),
         getAllLessonsApi(),
       ]);
 
       setVocabularies(vocabularyRes.data.data || vocabularyRes.data);
+
       setLessons(lessonRes.data.data || lessonRes.data);
     } catch (error) {
-      alert("Không thể tải dữ liệu từ vựng");
+      setError(
+        error.response?.data?.message ||
+          "Không thể tải dữ liệu từ vựng"
+      );
     } finally {
       setLoading(false);
     }
@@ -49,6 +65,7 @@ function VocabularyManagementPage() {
 
   const resetForm = () => {
     setEditingId(null);
+
     setFormData({
       lesson_id: "",
       word: "",
@@ -79,18 +96,27 @@ function VocabularyManagementPage() {
     };
 
     try {
+      setError("");
+      setSuccess("");
+
       if (editingId) {
         await updateVocabularyApi(editingId, payload);
-        alert("Cập nhật từ vựng thành công");
+
+        setSuccess("Cập nhật từ vựng thành công");
       } else {
         await createVocabularyApi(payload);
-        alert("Thêm từ vựng thành công");
+
+        setSuccess("Thêm từ vựng thành công");
       }
 
       resetForm();
+
       fetchData();
     } catch (error) {
-      alert(error.response?.data?.message || "Lưu từ vựng thất bại");
+      setError(
+        error.response?.data?.message ||
+          "Lưu từ vựng thất bại"
+      );
     }
   };
 
@@ -102,49 +128,86 @@ function VocabularyManagementPage() {
       word: vocab.word || "",
       reading: vocab.reading || "",
       kanji_meaning: vocab.kanji_meaning || "",
-      vietnamese_meaning: vocab.vietnamese_meaning || "",
-      example_sentence: vocab.example_sentence || "",
+      vietnamese_meaning:
+        vocab.vietnamese_meaning || "",
+      example_sentence:
+        vocab.example_sentence || "",
       audio_url: vocab.audio_url || "",
       jlpt_level: vocab.jlpt_level || "N5",
     });
   };
 
   const handleDelete = async (vocabularyId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xoá từ vựng này không?")) {
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn xoá từ vựng này không?"
+      )
+    ) {
       return;
     }
 
     try {
+      setError("");
+      setSuccess("");
+
       await deleteVocabularyApi(vocabularyId);
-      alert("Xoá từ vựng thành công");
+
+      setSuccess("Xoá từ vựng thành công");
+
       fetchData();
     } catch (error) {
-      alert(error.response?.data?.message || "Xoá từ vựng thất bại");
+      setError(
+        error.response?.data?.message ||
+          "Xoá từ vựng thất bại"
+      );
     }
   };
 
   return (
     <MainLayout>
-      <h1 className={styles.title}>Quản lý từ vựng</h1>
+      <h1 className={styles.title}>
+        Quản lý từ vựng
+      </h1>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <ErrorMessage message={error} />
+
+      {success && (
+        <p className={styles.success}>
+          {success}
+        </p>
+      )}
+
+      <form
+        className={styles.form}
+        onSubmit={handleSubmit}
+      >
         <h2 className={styles.formTitle}>
-          {editingId ? "Cập nhật từ vựng" : "Thêm từ vựng"}
+          {editingId
+            ? "Cập nhật từ vựng"
+            : "Thêm từ vựng"}
         </h2>
 
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
             <label>Bài học</label>
+
             <select
               name="lesson_id"
               value={formData.lesson_id}
               onChange={handleChange}
               required
             >
-              <option value="">Chọn bài học</option>
+              <option value="">
+                Chọn bài học
+              </option>
+
               {lessons.map((lesson) => (
-                <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                  {lesson.lesson_name} - {lesson.jlpt_level}
+                <option
+                  key={lesson.lesson_id}
+                  value={lesson.lesson_id}
+                >
+                  {lesson.lesson_name} -{" "}
+                  {lesson.jlpt_level}
                 </option>
               ))}
             </select>
@@ -152,6 +215,7 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Từ vựng</label>
+
             <input
               name="word"
               value={formData.word}
@@ -163,6 +227,7 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Cách đọc</label>
+
             <input
               name="reading"
               value={formData.reading}
@@ -173,6 +238,7 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Nghĩa Hán tự</label>
+
             <input
               name="kanji_meaning"
               value={formData.kanji_meaning}
@@ -182,10 +248,15 @@ function VocabularyManagementPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Nghĩa tiếng Việt</label>
+            <label>
+              Nghĩa tiếng Việt
+            </label>
+
             <input
               name="vietnamese_meaning"
-              value={formData.vietnamese_meaning}
+              value={
+                formData.vietnamese_meaning
+              }
               onChange={handleChange}
               placeholder="Ví dụ: Nhật Bản"
               required
@@ -194,6 +265,7 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Cấp độ JLPT</label>
+
             <select
               name="jlpt_level"
               value={formData.jlpt_level}
@@ -209,6 +281,7 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Audio URL</label>
+
             <input
               name="audio_url"
               value={formData.audio_url}
@@ -219,9 +292,12 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroupFull}>
             <label>Ví dụ</label>
+
             <textarea
               name="example_sentence"
-              value={formData.example_sentence}
+              value={
+                formData.example_sentence
+              }
               onChange={handleChange}
               placeholder="Ví dụ: 私は学生です。"
               rows="3"
@@ -230,8 +306,13 @@ function VocabularyManagementPage() {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.submitButton} type="submit">
-            {editingId ? "Cập nhật" : "Thêm từ vựng"}
+          <button
+            className={styles.submitButton}
+            type="submit"
+          >
+            {editingId
+              ? "Cập nhật"
+              : "Thêm từ vựng"}
           </button>
 
           {editingId && (
@@ -246,7 +327,7 @@ function VocabularyManagementPage() {
         </div>
       </form>
 
-      {loading && <p className={styles.message}>Đang tải dữ liệu...</p>}
+      {loading && <LoadingMessage />}
 
       {!loading && (
         <div className={styles.tableWrapper}>
@@ -265,24 +346,54 @@ function VocabularyManagementPage() {
 
             <tbody>
               {vocabularies.map((vocab) => (
-                <tr key={vocab.vocabulary_id}>
-                  <td>{vocab.vocabulary_id}</td>
+                <tr
+                  key={vocab.vocabulary_id}
+                >
+                  <td>
+                    {vocab.vocabulary_id}
+                  </td>
+
                   <td>{vocab.word}</td>
+
                   <td>{vocab.reading}</td>
-                  <td>{vocab.vietnamese_meaning}</td>
-                  <td>{vocab.jlpt_level}</td>
-                  <td>{vocab.lesson?.lesson_name || vocab.lesson_id}</td>
+
+                  <td>
+                    {
+                      vocab.vietnamese_meaning
+                    }
+                  </td>
+
+                  <td>
+                    {vocab.jlpt_level}
+                  </td>
+
+                  <td>
+                    {vocab.lesson
+                      ?.lesson_name ||
+                      vocab.lesson_id}
+                  </td>
+
                   <td>
                     <button
-                      className={styles.editButton}
-                      onClick={() => handleEdit(vocab)}
+                      className={
+                        styles.editButton
+                      }
+                      onClick={() =>
+                        handleEdit(vocab)
+                      }
                     >
                       Sửa
                     </button>
 
                     <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDelete(vocab.vocabulary_id)}
+                      className={
+                        styles.deleteButton
+                      }
+                      onClick={() =>
+                        handleDelete(
+                          vocab.vocabulary_id
+                        )
+                      }
                     >
                       Xoá
                     </button>

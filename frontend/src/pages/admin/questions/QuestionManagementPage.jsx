@@ -10,6 +10,9 @@ import {
 
 import { getAllVocabulariesApi } from "../../../api/vocabularyApi";
 
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
+
 import styles from "./QuestionManagementPage.module.css";
 
 function QuestionManagementPage() {
@@ -17,6 +20,9 @@ function QuestionManagementPage() {
   const [vocabularies, setVocabularies] = useState([]);
 
   const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [editingId, setEditingId] = useState(null);
 
@@ -29,18 +35,17 @@ function QuestionManagementPage() {
 
   const fetchData = async () => {
     try {
+      setError("");
+
       const [questionRes, vocabularyRes] = await Promise.all([
         getAllQuestionsApi(),
         getAllVocabulariesApi(),
       ]);
 
       setQuestions(questionRes.data.data || questionRes.data);
-
-      setVocabularies(
-        vocabularyRes.data.data || vocabularyRes.data
-      );
+      setVocabularies(vocabularyRes.data.data || vocabularyRes.data);
     } catch (error) {
-      alert("Không thể tải dữ liệu câu hỏi");
+      setError(error.response?.data?.message || "Không thể tải dữ liệu câu hỏi");
     } finally {
       setLoading(false);
     }
@@ -79,23 +84,21 @@ function QuestionManagementPage() {
     };
 
     try {
+      setError("");
+      setSuccess("");
+
       if (editingId) {
         await updateQuestionApi(editingId, payload);
-
-        alert("Cập nhật câu hỏi thành công");
+        setSuccess("Cập nhật câu hỏi thành công");
       } else {
         await createQuestionApi(payload);
-
-        alert("Thêm câu hỏi thành công");
+        setSuccess("Thêm câu hỏi thành công");
       }
 
       resetForm();
       fetchData();
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Lưu câu hỏi thất bại"
-      );
+      setError(error.response?.data?.message || "Lưu câu hỏi thất bại");
     }
   };
 
@@ -116,22 +119,25 @@ function QuestionManagementPage() {
     }
 
     try {
+      setError("");
+      setSuccess("");
+
       await deleteQuestionApi(questionId);
 
-      alert("Xoá câu hỏi thành công");
-
+      setSuccess("Xoá câu hỏi thành công");
       fetchData();
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Xoá câu hỏi thất bại"
-      );
+      setError(error.response?.data?.message || "Xoá câu hỏi thất bại");
     }
   };
 
   return (
     <MainLayout>
       <h1 className={styles.title}>Quản lý câu hỏi</h1>
+
+      <ErrorMessage message={error} />
+
+      {success && <p className={styles.success}>{success}</p>}
 
       <form
         className={styles.form}
@@ -225,11 +231,7 @@ function QuestionManagementPage() {
         </div>
       </form>
 
-      {loading && (
-        <p className={styles.message}>
-          Đang tải dữ liệu...
-        </p>
-      )}
+      {loading && <LoadingMessage />}
 
       {!loading && (
         <div className={styles.tableWrapper}>

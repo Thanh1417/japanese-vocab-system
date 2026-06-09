@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+
 import MainLayout from "../../../layouts/MainLayout";
+
 import {
   createLessonApi,
   deleteLessonApi,
@@ -7,9 +9,17 @@ import {
   updateLessonApi,
 } from "../../../api/lessonApi";
 
+import LoadingMessage from "../../../components/common/LoadingMessage";
+import ErrorMessage from "../../../components/common/ErrorMessage";
+
+import styles from "./LessonListPage.module.css";
+
 function LessonListPage() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [lessonName, setLessonName] = useState("");
   const [jlptLevel, setJlptLevel] = useState("N5");
@@ -17,15 +27,22 @@ function LessonListPage() {
 
   const fetchLessons = async () => {
     try {
+      setError("");
+
       const res = await getAllLessonsApi();
       setLessons(res.data.data || res.data);
     } catch (error) {
-      console.log(error);
-      alert("Không thể tải danh sách bài học");
+      setError(
+        error.response?.data?.message || "Không thể tải danh sách bài học"
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLessons();
+  }, []);
 
   const resetForm = () => {
     setLessonName("");
@@ -37,6 +54,9 @@ function LessonListPage() {
     e.preventDefault();
 
     try {
+      setError("");
+      setSuccess("");
+
       const payload = {
         lesson_name: lessonName,
         jlpt_level: jlptLevel,
@@ -44,17 +64,16 @@ function LessonListPage() {
 
       if (editingLessonId) {
         await updateLessonApi(editingLessonId, payload);
-        alert("Cập nhật bài học thành công");
+        setSuccess("Cập nhật bài học thành công");
       } else {
         await createLessonApi(payload);
-        alert("Thêm bài học thành công");
+        setSuccess("Thêm bài học thành công");
       }
 
       resetForm();
       fetchLessons();
     } catch (error) {
-      console.log(error);
-      alert(error.response?.data?.message || "Lưu bài học thất bại");
+      setError(error.response?.data?.message || "Lưu bài học thất bại");
     }
   };
 
@@ -65,119 +84,123 @@ function LessonListPage() {
   };
 
   const handleDeleteLesson = async (lessonId) => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc chắn muốn xoá bài học này không?"
-    );
-
-    if (!confirmDelete) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xoá bài học này không?")) {
+      return;
+    }
 
     try {
+      setError("");
+      setSuccess("");
+
       await deleteLessonApi(lessonId);
-      alert("Xoá bài học thành công");
+
+      setSuccess("Xoá bài học thành công");
       fetchLessons();
     } catch (error) {
-      console.log(error);
-      alert(error.response?.data?.message || "Xoá bài học thất bại");
+      setError(error.response?.data?.message || "Xoá bài học thất bại");
     }
   };
 
-  useEffect(() => {
-    fetchLessons();
-  }, []);
-
   return (
     <MainLayout>
-      <h1>Quản lý bài học</h1>
+      <h1 className={styles.title}>Quản lý bài học</h1>
 
-      <form
-        onSubmit={handleSubmitLesson}
-        style={{
-          background: "white",
-          padding: "20px",
-          borderRadius: "12px",
-          marginBottom: "20px",
-        }}
-      >
-        <h3>{editingLessonId ? "Cập nhật bài học" : "Thêm bài học"}</h3>
+      <ErrorMessage message={error} />
 
-        <div>
-          <label>Tên bài học</label>
-          <br />
-          <input
-            value={lessonName}
-            onChange={(e) => setLessonName(e.target.value)}
-            placeholder="Ví dụ: Bài 1 - Giới thiệu"
-            required
-          />
+      {success && <p className={styles.success}>{success}</p>}
+
+      <form className={styles.form} onSubmit={handleSubmitLesson}>
+        <h2 className={styles.formTitle}>
+          {editingLessonId ? "Cập nhật bài học" : "Thêm bài học"}
+        </h2>
+
+        <div className={styles.formGrid}>
+          <div className={styles.formGroup}>
+            <label>Tên bài học</label>
+
+            <input
+              value={lessonName}
+              onChange={(e) => setLessonName(e.target.value)}
+              placeholder="Ví dụ: Bài 1 - Chào hỏi"
+              required
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Cấp độ JLPT</label>
+
+            <select
+              value={jlptLevel}
+              onChange={(e) => setJlptLevel(e.target.value)}
+            >
+              <option value="N5">N5</option>
+              <option value="N4">N4</option>
+              <option value="N3">N3</option>
+              <option value="N2">N2</option>
+              <option value="N1">N1</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ marginTop: "10px" }}>
-          <label>Cấp độ JLPT</label>
-          <br />
-          <select
-            value={jlptLevel}
-            onChange={(e) => setJlptLevel(e.target.value)}
-          >
-            <option value="N5">N5</option>
-            <option value="N4">N4</option>
-            <option value="N3">N3</option>
-            <option value="N2">N2</option>
-            <option value="N1">N1</option>
-          </select>
-        </div>
-
-        <button type="submit" style={{ marginTop: "12px" }}>
-          {editingLessonId ? "Cập nhật" : "Thêm bài học"}
-        </button>
-
-        {editingLessonId && (
-          <button
-            type="button"
-            onClick={resetForm}
-            style={{ marginLeft: "10px" }}
-          >
-            Huỷ
+        <div className={styles.actions}>
+          <button className={styles.submitButton} type="submit">
+            {editingLessonId ? "Cập nhật" : "Thêm bài học"}
           </button>
-        )}
+
+          {editingLessonId && (
+            <button
+              className={styles.cancelButton}
+              type="button"
+              onClick={resetForm}
+            >
+              Huỷ
+            </button>
+          )}
+        </div>
       </form>
 
-      {loading && <p>Đang tải dữ liệu...</p>}
+      {loading && <LoadingMessage />}
 
       {!loading && (
-        <table border="1" cellPadding="10" width="100%">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tên bài học</th>
-              <th>Cấp độ JLPT</th>
-              <th>Tổng số từ</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {lessons.map((lesson) => (
-              <tr key={lesson.lesson_id}>
-                <td>{lesson.lesson_id}</td>
-                <td>{lesson.lesson_name}</td>
-                <td>{lesson.jlpt_level}</td>
-                <td>{lesson.total_words}</td>
-                <td>
-                  <button onClick={() => handleEditLesson(lesson)}>
-                    Sửa
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteLesson(lesson.lesson_id)}
-                    style={{ marginLeft: "8px" }}
-                  >
-                    Xoá
-                  </button>
-                </td>
+        <div className={styles.tableWrapper}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên bài học</th>
+                <th>Cấp độ JLPT</th>
+                <th>Tổng số từ</th>
+                <th>Thao tác</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {lessons.map((lesson) => (
+                <tr key={lesson.lesson_id}>
+                  <td>{lesson.lesson_id}</td>
+                  <td>{lesson.lesson_name}</td>
+                  <td>{lesson.jlpt_level}</td>
+                  <td>{lesson.total_words}</td>
+                  <td>
+                    <button
+                      className={styles.editButton}
+                      onClick={() => handleEditLesson(lesson)}
+                    >
+                      Sửa
+                    </button>
+
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleDeleteLesson(lesson.lesson_id)}
+                    >
+                      Xoá
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </MainLayout>
   );
