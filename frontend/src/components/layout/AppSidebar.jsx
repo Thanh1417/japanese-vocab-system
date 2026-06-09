@@ -1,5 +1,7 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+
 import { useAuth } from "../../contexts/AuthContext";
+
 import styles from "./AppSidebar.module.css";
 
 function AppSidebar() {
@@ -7,28 +9,157 @@ function AppSidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      <h2 className={styles.logo}>JVocab</h2>
+      <h2 className={styles.logo}>
+        Japanese Learning
+      </h2>
 
       <nav className={styles.nav}>
-        <Link to="/dashboard">Dashboard</Link>
-
-        {user?.role === "admin" && (
+        {user?.role === "admin" ? (
           <>
-            <Link to="/admin/lessons">Quản lý bài học</Link>
-            <Link to="/admin/vocabularies">Quản lý từ vựng</Link>
-            <Link to="/admin/questions">Quản lý câu hỏi</Link>
-            <Link to="/admin/accounts">Quản lý tài khoản</Link>
+            <NavLink
+              to="/admin/dashboard"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Dashboard
+            </NavLink>
+
+            <NavLink
+              to="/admin/lessons"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Quản lý bài học
+            </NavLink>
+
+            <NavLink
+              to="/admin/vocabularies"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Quản lý từ vựng
+            </NavLink>
+
+            <NavLink
+              to="/admin/questions"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Quản lý câu hỏi
+            </NavLink>
+
+            <NavLink
+              to="/admin/accounts"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Quản lý tài khoản
+            </NavLink>
           </>
-        )}
-
-        {user?.role === "learner" && (
+        ) : (
           <>
-            <Link to="/vocabularies">Từ vựng</Link>
-            <Link to="/quiz">Luyện tập</Link>
-            <Link to="/favorites">Yêu thích</Link>
-            <Link to="/study-sessions">Phiên học</Link>
-            <Link to="/srs-review">Ôn tập SRS</Link>
-            <Link to="/recommendations">Gợi ý học tập</Link>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Dashboard
+            </NavLink>
+
+            <NavLink
+              to="/vocabularies"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Từ vựng
+            </NavLink>
+
+            <NavLink
+              to="/flashcards"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Flashcard
+            </NavLink>
+
+            <NavLink
+              to="/quiz"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Quiz
+            </NavLink>
+
+            <NavLink
+              to="/favorites"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Yêu thích
+            </NavLink>
+
+            <NavLink
+              to="/srs-review"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Ôn tập SRS
+            </NavLink>
+
+            <NavLink
+              to="/recommendations"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Gợi ý học tập
+            </NavLink>
+
+            <NavLink
+              to="/study-sessions"
+              className={({ isActive }) =>
+                isActive
+                  ? `${styles.link} ${styles.active}`
+                  : styles.link
+              }
+            >
+              Lịch sử học
+            </NavLink>
           </>
         )}
       </nav>

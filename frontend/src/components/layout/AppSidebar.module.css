@@ -17,11 +17,38 @@
   gap: 10px;
 }
 
-.nav a {
+.link {
   padding: 10px 12px;
   border-radius: var(--radius-md);
+
+  color: inherit;
+  text-decoration: none;
+
+  transition: 0.2s;
 }
 
-.nav a:hover {
+.link:hover {
   background: #334155;
+}
+
+.active {
+  background: white;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .link {
+    font-size: 14px;
+  }
 }
