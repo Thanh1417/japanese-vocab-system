@@ -6,8 +6,19 @@
 .main {
   flex: 1;
   background: var(--color-bg);
+  min-width: 0;
 }
 
 .content {
   padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 16px;
+  }
 }

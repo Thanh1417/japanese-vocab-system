@@ -14,3 +14,17 @@
   margin-top: 20px;
   color: var(--color-muted);
 }
+
+@media (max-width: 1024px) {
+  .grid,
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid,
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
