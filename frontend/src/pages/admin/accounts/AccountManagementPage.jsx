@@ -10,6 +10,7 @@ import {
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import SuccessMessage from "../../../components/common/SuccessMessage";
 
 import styles from "./AccountManagementPage.module.css";
 
@@ -125,11 +126,7 @@ function AccountManagementPage() {
 
       <ErrorMessage message={error} />
 
-      {success && (
-        <p className={styles.success}>
-          {success}
-        </p>
-      )}
+      <SuccessMessage message={success} />
 
       {loading && <LoadingMessage />}
 

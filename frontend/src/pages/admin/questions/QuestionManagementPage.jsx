@@ -12,6 +12,7 @@ import { getAllVocabulariesApi } from "../../../api/vocabularyApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import SuccessMessage from "../../../components/common/SuccessMessage";
 
 import styles from "./QuestionManagementPage.module.css";
 
@@ -137,7 +138,7 @@ function QuestionManagementPage() {
 
       <ErrorMessage message={error} />
 
-      {success && <p className={styles.success}>{success}</p>}
+      <SuccessMessage message={success} />
 
       <form
         className={styles.form}

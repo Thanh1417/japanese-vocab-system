@@ -12,6 +12,7 @@ import { getAllLessonsApi } from "../../../api/lessonApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import SuccessMessage from "../../../components/common/SuccessMessage";
 
 import styles from "./VocabularyManagementPage.module.css";
 
@@ -171,11 +172,7 @@ function VocabularyManagementPage() {
 
       <ErrorMessage message={error} />
 
-      {success && (
-        <p className={styles.success}>
-          {success}
-        </p>
-      )}
+      <SuccessMessage message={success} />
 
       <form
         className={styles.form}
