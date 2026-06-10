@@ -27,6 +27,10 @@ function QuestionManagementPage() {
 
   const [editingId, setEditingId] = useState(null);
 
+  const [keyword, setKeyword] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterLevel, setFilterLevel] = useState("");
+
   const [formData, setFormData] = useState({
     vocabulary_id: "",
     content: "",
@@ -44,9 +48,13 @@ function QuestionManagementPage() {
       ]);
 
       setQuestions(questionRes.data.data || questionRes.data);
+
       setVocabularies(vocabularyRes.data.data || vocabularyRes.data);
     } catch (error) {
-      setError(error.response?.data?.message || "Không thể tải dữ liệu câu hỏi");
+      setError(
+        error.response?.data?.message ||
+          "Không thể tải dữ liệu câu hỏi"
+      );
     } finally {
       setLoading(false);
     }
@@ -55,6 +63,25 @@ function QuestionManagementPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredQuestions = questions.filter((question) => {
+    const searchText = keyword.toLowerCase();
+
+    const matchKeyword =
+      question.content?.toLowerCase().includes(searchText) ||
+      question.correct_answer?.toLowerCase().includes(searchText) ||
+      question.vocabulary?.word?.toLowerCase().includes(searchText);
+
+    const matchType = filterType
+      ? question.question_type === filterType
+      : true;
+
+    const matchLevel = filterLevel
+      ? question.vocabulary?.jlpt_level === filterLevel
+      : true;
+
+    return matchKeyword && matchType && matchLevel;
+  });
 
   const resetForm = () => {
     setEditingId(null);
@@ -90,16 +117,22 @@ function QuestionManagementPage() {
 
       if (editingId) {
         await updateQuestionApi(editingId, payload);
+
         setSuccess("Cập nhật câu hỏi thành công");
       } else {
         await createQuestionApi(payload);
+
         setSuccess("Thêm câu hỏi thành công");
       }
 
       resetForm();
+
       fetchData();
     } catch (error) {
-      setError(error.response?.data?.message || "Lưu câu hỏi thất bại");
+      setError(
+        error.response?.data?.message ||
+          "Lưu câu hỏi thất bại"
+      );
     }
   };
 
@@ -126,15 +159,21 @@ function QuestionManagementPage() {
       await deleteQuestionApi(questionId);
 
       setSuccess("Xoá câu hỏi thành công");
+
       fetchData();
     } catch (error) {
-      setError(error.response?.data?.message || "Xoá câu hỏi thất bại");
+      setError(
+        error.response?.data?.message ||
+          "Xoá câu hỏi thất bại"
+      );
     }
   };
 
   return (
     <MainLayout>
-      <h1 className={styles.title}>Quản lý câu hỏi</h1>
+      <h1 className={styles.title}>
+        Quản lý câu hỏi
+      </h1>
 
       <ErrorMessage message={error} />
 
@@ -160,7 +199,9 @@ function QuestionManagementPage() {
               onChange={handleChange}
               required
             >
-              <option value="">Chọn từ vựng</option>
+              <option value="">
+                Chọn từ vựng
+              </option>
 
               {vocabularies.map((vocab) => (
                 <option
@@ -181,7 +222,10 @@ function QuestionManagementPage() {
               value={formData.question_type}
               onChange={handleChange}
             >
-              <option value="typing">Typing</option>
+              <option value="typing">
+                Typing
+              </option>
+
               <option value="multiple_choice">
                 Multiple Choice
               </option>
@@ -189,7 +233,9 @@ function QuestionManagementPage() {
           </div>
 
           <div className={styles.formGroupFull}>
-            <label>Nội dung câu hỏi</label>
+            <label>
+              Nội dung câu hỏi
+            </label>
 
             <textarea
               name="content"
@@ -217,7 +263,9 @@ function QuestionManagementPage() {
             className={styles.submitButton}
             type="submit"
           >
-            {editingId ? "Cập nhật" : "Thêm câu hỏi"}
+            {editingId
+              ? "Cập nhật"
+              : "Thêm câu hỏi"}
           </button>
 
           {editingId && (
@@ -232,6 +280,63 @@ function QuestionManagementPage() {
         </div>
       </form>
 
+      <div className={styles.filterBox}>
+        <input
+          className={styles.filterInput}
+          value={keyword}
+          onChange={(e) =>
+            setKeyword(e.target.value)
+          }
+          placeholder="Tìm câu hỏi, đáp án hoặc từ vựng..."
+        />
+
+        <select
+          className={styles.filterSelect}
+          value={filterType}
+          onChange={(e) =>
+            setFilterType(e.target.value)
+          }
+        >
+          <option value="">
+            Tất cả loại câu hỏi
+          </option>
+
+          <option value="typing">
+            Typing
+          </option>
+
+          <option value="multiple_choice">
+            Multiple Choice
+          </option>
+        </select>
+
+        <select
+          className={styles.filterSelect}
+          value={filterLevel}
+          onChange={(e) =>
+            setFilterLevel(e.target.value)
+          }
+        >
+          <option value="">
+            Tất cả cấp độ
+          </option>
+
+          <option value="N5">N5</option>
+          <option value="N4">N4</option>
+          <option value="N3">N3</option>
+          <option value="N2">N2</option>
+          <option value="N1">N1</option>
+        </select>
+      </div>
+
+      <p className={styles.resultText}>
+        Tìm thấy{" "}
+        <strong>
+          {filteredQuestions.length}
+        </strong>{" "}
+        câu hỏi
+      </p>
+
       {loading && <LoadingMessage />}
 
       {!loading && (
@@ -244,52 +349,85 @@ function QuestionManagementPage() {
                 <th>Nội dung</th>
                 <th>Đáp án</th>
                 <th>Loại</th>
+                <th>JLPT</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
 
             <tbody>
-              {questions.map((question) => (
-                <tr key={question.question_id}>
-                  <td>{question.question_id}</td>
-
-                  <td>
-                    {question.vocabulary?.word}
-                  </td>
-
-                  <td>{question.content}</td>
-
-                  <td>
-                    {question.correct_answer}
-                  </td>
-
-                  <td>
-                    {question.question_type}
-                  </td>
-
-                  <td>
-                    <button
-                      className={styles.editButton}
-                      onClick={() =>
-                        handleEdit(question)
+              {filteredQuestions.map(
+                (question) => (
+                  <tr
+                    key={
+                      question.question_id
+                    }
+                  >
+                    <td>
+                      {
+                        question.question_id
                       }
-                    >
-                      Sửa
-                    </button>
+                    </td>
 
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() =>
-                        handleDelete(
-                          question.question_id
-                        )
+                    <td>
+                      {
+                        question.vocabulary
+                          ?.word
                       }
-                    >
-                      Xoá
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    <td>
+                      {question.content}
+                    </td>
+
+                    <td>
+                      {
+                        question.correct_answer
+                      }
+                    </td>
+
+                    <td>
+                      {
+                        question.question_type
+                      }
+                    </td>
+
+                    <td>
+                      {
+                        question.vocabulary
+                          ?.jlpt_level
+                      }
+                    </td>
+
+                    <td>
+                      <button
+                        className={
+                          styles.editButton
+                        }
+                        onClick={() =>
+                          handleEdit(
+                            question
+                          )
+                        }
+                      >
+                        Sửa
+                      </button>
+
+                      <button
+                        className={
+                          styles.deleteButton
+                        }
+                        onClick={() =>
+                          handleDelete(
+                            question.question_id
+                          )
+                        }
+                      >
+                        Xoá
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
