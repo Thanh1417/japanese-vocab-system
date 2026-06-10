@@ -18,6 +18,7 @@ import styles from "./QuizPage.module.css";
 
 function QuizPage() {
   const [questions, setQuestions] = useState([]);
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [lessons, setLessons] = useState([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,9 +73,16 @@ function QuizPage() {
     return matchLevel && matchLesson;
   });
 
-  const currentQuestion = filteredQuestions[currentIndex];
+  const shuffleArray = (array) => {
+    return [...array].sort(() => Math.random() - 0.5);
+  };
+
+  const currentQuestion = quizQuestions[currentIndex];
 
   const handleStartQuiz = () => {
+    const shuffledQuestions = shuffleArray(filteredQuestions);
+
+    setQuizQuestions(shuffledQuestions);
     setCurrentIndex(0);
     setSelectedAnswer("");
     setScore(0);
@@ -115,10 +123,10 @@ function QuizPage() {
 
       const nextIndex = currentIndex + 1;
 
-      if (nextIndex >= filteredQuestions.length) {
+      if (nextIndex >= quizQuestions.length) {
         if (sessionId) {
           await endStudySessionApi(sessionId, {
-            total_questions: filteredQuestions.length,
+            total_questions: quizQuestions.length,
             correct_answers: newScore,
           });
         }
@@ -183,7 +191,7 @@ function QuizPage() {
         </div>
       )}
 
-      {!loading && isStarted && filteredQuestions.length === 0 && (
+      {!loading && isStarted && quizQuestions.length === 0 && (
         <p className={styles.message}>Chưa có câu hỏi cho cấp độ này</p>
       )}
 
@@ -192,7 +200,7 @@ function QuizPage() {
           <h2>Hoàn thành Quiz</h2>
 
           <p>
-            Điểm số: {score} / {filteredQuestions.length}
+            Điểm số: {score} / {quizQuestions.length}
           </p>
         </div>
       )}
@@ -200,7 +208,7 @@ function QuizPage() {
       {!loading && isStarted && currentQuestion && !showResult && (
         <div className={styles.quizCard}>
           <p className={styles.progress}>
-            Câu {currentIndex + 1} / {filteredQuestions.length}
+            Câu {currentIndex + 1} / {quizQuestions.length}
           </p>
 
           <h2 className={styles.question}>{currentQuestion.content}</h2>

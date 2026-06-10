@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import MainLayout from "../layouts/MainLayout";
 import { getDashboardOverviewApi } from "../api/dashboardApi";
+
 import DashboardCard from "../components/common/DashboardCard";
 import LoadingMessage from "../components/common/LoadingMessage";
 import ErrorMessage from "../components/common/ErrorMessage";
@@ -9,51 +10,61 @@ import ErrorMessage from "../components/common/ErrorMessage";
 import styles from "./DashboardPage.module.css";
 
 function DashboardPage() {
-  const [overview, setOverview] = useState(null);
+  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchDashboardOverview = async () => {
+  const fetchDashboard = async () => {
     try {
       setError("");
 
       const res = await getDashboardOverviewApi();
-      setOverview(res.data.data || res.data);
+      setStatistics(res.data.data || res.data);
     } catch (error) {
-      setError(
-        error.response?.data?.message || "Không thể tải dữ liệu dashboard"
-      );
+      setError(error.response?.data?.message || "Không thể tải dashboard");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardOverview();
+    fetchDashboard();
   }, []);
 
   return (
     <MainLayout>
-      <h1 className={styles.title}>Dashboard</h1>
+      <h1 className={styles.title}>Dashboard học tập</h1>
 
       <ErrorMessage message={error} />
 
       {loading && <LoadingMessage />}
 
-      {!loading && !error && overview && (
-        <div className={styles.cardGrid}>
-          <DashboardCard title="Tổng phiên học" value={overview.total_sessions} />
+      {!loading && !error && statistics && (
+        <>
+          <div className={styles.cardGrid}>
+            <DashboardCard title="Phiên học" value={statistics.totalSessions} />
+            <DashboardCard title="Tổng câu hỏi" value={statistics.totalQuestions} />
+            <DashboardCard title="Câu đúng" value={statistics.totalCorrect} />
+            <DashboardCard title="Tỉ lệ đúng" value={`${statistics.accuracy}%`} />
+            <DashboardCard title="Từ yêu thích" value={statistics.totalFavorites} />
+          </div>
 
-          <DashboardCard title="Tổng câu hỏi" value={overview.total_questions} />
+          <div className={styles.chartCard}>
+            <h2>Tổng quan độ chính xác</h2>
 
-          <DashboardCard title="Câu đúng" value={overview.correct_answers} />
+            <div className={styles.progressBar}>
+              <div
+                className={styles.progressFill}
+                style={{ width: `${statistics.accuracy}%` }}
+              />
+            </div>
 
-          <DashboardCard title="Tỉ lệ đúng" value={`${overview.accuracy_rate}%`} />
-
-          <DashboardCard title="Yêu thích" value={overview.favorite_count} />
-
-          <DashboardCard title="Từ cần ôn" value={overview.due_vocabulary_count} />
-        </div>
+            <p className={styles.chartText}>
+              Bạn trả lời đúng {statistics.totalCorrect} /{" "}
+              {statistics.totalQuestions} câu, đạt {statistics.accuracy}%.
+            </p>
+          </div>
+        </>
       )}
     </MainLayout>
   );

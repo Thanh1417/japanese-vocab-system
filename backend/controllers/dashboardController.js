@@ -4,7 +4,7 @@ const getOverview = async (req, res) => {
   try {
     const account_id = req.user.account_id;
 
-    const result = await dashboardService.getOverview(account_id);
+    const result = await dashboardService.getDashboardStatistics(account_id);
 
     return res.status(result.statusCode).json(result);
   } catch (error) {
