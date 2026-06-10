@@ -14,8 +14,13 @@
   margin: 6px 0;
 }
 
-.favoriteButton {
+.actions {
+  display: flex;
+  gap: 10px;
   margin-top: 12px;
+}
+
+.favoriteButton {
   padding: 8px 12px;
   border: none;
   border-radius: var(--radius-md);
@@ -24,6 +29,21 @@
   cursor: pointer;
 }
 
-.favoriteButton:hover {
+.studyButton {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: #e0f2fe;
+  color: #0369a1;
+  text-decoration: none;
+}
+
+.favoriteButton:hover,
+.studyButton:hover {
   opacity: 0.9;
+}
+
+.message {
+  margin-top: 10px;
+  color: #166534;
+  font-size: 14px;
 }

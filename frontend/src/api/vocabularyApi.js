@@ -15,3 +15,7 @@ export const updateVocabularyApi = (vocabularyId, data) => {
 export const deleteVocabularyApi = (vocabularyId) => {
   return axiosClient.delete(`/vocabularies/${vocabularyId}`);
 };
+
+export const getFlashcardVocabulariesApi = () => {
+  return axiosClient.get("/vocabularies");
+};

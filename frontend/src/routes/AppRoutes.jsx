@@ -22,6 +22,7 @@ import QuizPage from "../pages/learner/quiz/QuizPage";
 import StudySessionListPage from "../pages/learner/studySessions/StudySessionListPage";
 import StudySessionDetailPage from "../pages/learner/studySessions/StudySessionDetailPage";
 import RecommendationPage from "../pages/learner/recommendations/RecommendationPage";
+import FlashcardPage from "../pages/learner/flashcards/FlashcardPage";
 
 function AppRoutes() {
   return (
@@ -150,6 +151,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecommendationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/flashcards"
+        element={
+          <ProtectedRoute>
+            <FlashcardPage />
           </ProtectedRoute>
         }
       />
