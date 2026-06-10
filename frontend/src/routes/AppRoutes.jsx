@@ -5,6 +5,7 @@ import GuestRoute from "./GuestRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import HomeRedirect from "./HomeRedirect";
 
+import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
@@ -28,6 +29,15 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomeRedirect />} />
+
+      <Route
+        path="/register"
+        element={
+          <GuestRoute>
+            <RegisterPage />
+          </GuestRoute>
+        }
+      />
 
       <Route
         path="/login"
