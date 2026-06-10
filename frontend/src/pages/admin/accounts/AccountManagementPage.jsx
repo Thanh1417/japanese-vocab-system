@@ -21,6 +21,10 @@ function AccountManagementPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [keyword, setKeyword] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
   const fetchAccounts = async () => {
     try {
       setError("");
@@ -31,7 +35,7 @@ function AccountManagementPage() {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "Không thể tải danh sách tài khoản"
+        "Không thể tải danh sách tài khoản"
       );
     } finally {
       setLoading(false);
@@ -62,7 +66,7 @@ function AccountManagementPage() {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "Cập nhật vai trò thất bại"
+        "Cập nhật vai trò thất bại"
       );
     }
   };
@@ -87,7 +91,7 @@ function AccountManagementPage() {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "Cập nhật trạng thái thất bại"
+        "Cập nhật trạng thái thất bại"
       );
     }
   };
@@ -113,10 +117,24 @@ function AccountManagementPage() {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "Xoá tài khoản thất bại"
+        "Xoá tài khoản thất bại"
       );
     }
   };
+
+  const filteredAccounts = accounts.filter((account) => {
+    const searchText = keyword.toLowerCase();
+
+    const matchKeyword =
+      account.full_name?.toLowerCase().includes(searchText) ||
+      account.email?.toLowerCase().includes(searchText);
+
+    const matchRole = filterRole ? account.role === filterRole : true;
+
+    const matchStatus = filterStatus ? account.status === filterStatus : true;
+
+    return matchKeyword && matchRole && matchStatus;
+  });
 
   return (
     <MainLayout>
@@ -127,6 +145,39 @@ function AccountManagementPage() {
       <ErrorMessage message={error} />
 
       <SuccessMessage message={success} />
+
+      <div className={styles.filterBox}>
+        <input
+          className={styles.filterInput}
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="Tìm theo họ tên hoặc email..."
+        />
+
+        <select
+          className={styles.filterSelect}
+          value={filterRole}
+          onChange={(e) => setFilterRole(e.target.value)}
+        >
+          <option value="">Tất cả vai trò</option>
+          <option value="learner">learner</option>
+          <option value="admin">admin</option>
+        </select>
+
+        <select
+          className={styles.filterSelect}
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="">Tất cả trạng thái</option>
+          <option value="active">active</option>
+          <option value="locked">locked</option>
+        </select>
+      </div>
+
+      <p className={styles.resultText}>
+        Tìm thấy <strong>{filteredAccounts.length}</strong> tài khoản
+      </p>
 
       {loading && <LoadingMessage />}
 
@@ -146,7 +197,7 @@ function AccountManagementPage() {
             </thead>
 
             <tbody>
-              {accounts.map((account) => (
+              {filteredAccounts.map((account) => (
                 <tr key={account.account_id}>
                   <td>{account.account_id}</td>
 
