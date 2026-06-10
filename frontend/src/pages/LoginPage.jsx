@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { loginApi } from "../api/authApi";
 import { useAuth } from "../contexts/AuthContext";
@@ -80,8 +80,14 @@ function LoginPage() {
             Đăng nhập
           </button>
         </form>
+
+        <p className={styles.footerText}>
+          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+        </p>
+        
       </div>
     </div>
+
   );
 }
 
