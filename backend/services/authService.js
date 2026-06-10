@@ -41,6 +41,14 @@ const login = async (email, password) => {
     };
   }
 
+  if (user.status === "locked") {
+    return {
+      success: false,
+      statusCode: 403,
+      message: "Tai khoan da bi khoa!",
+    };
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
