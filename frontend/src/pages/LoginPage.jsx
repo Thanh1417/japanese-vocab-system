@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { loginApi } from "../api/authApi";
 import { useAuth } from "../contexts/AuthContext";
 
-function Login() {
+import ErrorMessage from "../components/common/ErrorMessage";
+import styles from "./LoginPage.module.css";
+
+function LoginPage() {
   const [email, setEmail] = useState("login@test.com");
   const [password, setPassword] = useState("123456");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -15,6 +19,8 @@ function Login() {
     e.preventDefault();
 
     try {
+      setError("");
+
       const res = await loginApi({
         email,
         password,
@@ -27,46 +33,56 @@ function Login() {
         user,
       });
 
-      setMessage("Đăng nhập thành công");
-
       if (user.role === "admin") {
         navigate("/admin/dashboard");
       } else {
         navigate("/dashboard");
       }
     } catch (error) {
-      setMessage(error.response?.data?.message || "Đăng nhập thất bại");
+      setError(error.response?.data?.message || "Đăng nhập thất bại");
     }
   };
 
   return (
-    <div>
-      <h2>Đăng nhập</h2>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>Japanese Vocabulary System</h1>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <p className={styles.subtitle}>
+          Đăng nhập để tiếp tục học từ vựng tiếng Nhật cá nhân hoá
+        </p>
 
-        <div>
-          <label>Mật khẩu</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <ErrorMessage message={error} />
 
-        <button type="submit">Đăng nhập</button>
-      </form>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label>Email</label>
 
-      <p>{message}</p>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Nhập email"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Mật khẩu</label>
+
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Nhập mật khẩu"
+            />
+          </div>
+
+          <button className={styles.button} type="submit">
+            Đăng nhập
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
 
-export default Login;
+export default LoginPage;
