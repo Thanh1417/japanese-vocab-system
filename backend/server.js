@@ -18,7 +18,7 @@ const questionResultRoutes = require("./routes/questionResultRoutes");
 const srsRoutes = require("./routes/srsRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-
+const studyGoalRoutes = require("./routes/studyGoalRoutes");
 
 app.use(express.json());
 
@@ -34,6 +34,7 @@ app.use("/api/question-results", questionResultRoutes);
 app.use("/api/srs", srsRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/study-goals", studyGoalRoutes);
 
 
 const PORT = 3000;
