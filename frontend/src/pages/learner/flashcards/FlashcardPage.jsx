@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../../../layouts/MainLayout";
 import { getFlashcardVocabulariesApi } from "../../../api/vocabularyApi";
 import { getAllLessonsApi } from "../../../api/lessonApi";
+import { submitSrsReviewApi } from "../../../api/srsApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -163,19 +164,38 @@ function FlashcardPage() {
     setIsFinished(true);
   };
 
-  const handleReview = (rating) => {
-    setReviewStats((prev) => ({
-      ...prev,
-      [rating]: prev[rating] + 1,
-    }));
-
-    if (currentIndex >= flashcardVocabularies.length - 1) {
-      setIsFinished(true);
+  const handleReview = async (rating) => {
+    if (!currentVocabulary) {
       return;
     }
 
-    setCurrentIndex((prev) => prev + 1);
-    setIsFlipped(false);
+    const isCorrect = rating === "good" || rating === "easy";
+
+    try {
+      setError("");
+
+      await submitSrsReviewApi({
+        vocabulary_id: currentVocabulary.vocabulary_id,
+        is_correct: isCorrect,
+      });
+
+      setReviewStats((prev) => ({
+        ...prev,
+        [rating]: prev[rating] + 1,
+      }));
+
+      if (currentIndex >= flashcardVocabularies.length - 1) {
+        setIsFinished(true);
+        return;
+      }
+
+      setCurrentIndex((prev) => prev + 1);
+      setIsFlipped(false);
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Không thể cập nhật tiến độ SRS"
+      );
+    }
   };
 
   return (

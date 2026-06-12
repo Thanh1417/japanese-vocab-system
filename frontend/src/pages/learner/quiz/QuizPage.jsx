@@ -23,6 +23,7 @@ function QuizPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [currentOptions, setCurrentOptions] = useState([]);
 
   const [answerResult, setAnswerResult] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -37,6 +38,7 @@ function QuizPage() {
 
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedLessonId, setSelectedLessonId] = useState("");
+  const [quizMode, setQuizMode] = useState("typing");
 
   const [isStarted, setIsStarted] = useState(false);
 
@@ -124,8 +126,7 @@ function QuizPage() {
       return selectedLevel ? lesson.jlpt_level === selectedLevel : true;
     })
     .sort((a, b) => {
-      const levelCompare =
-        jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+      const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
 
       if (levelCompare !== 0) {
         return levelCompare;
@@ -155,8 +156,7 @@ function QuizPage() {
       return levelCompare;
     }
 
-    const lessonCompare =
-      a.vocabulary?.lesson_id - b.vocabulary?.lesson_id;
+    const lessonCompare = a.vocabulary?.lesson_id - b.vocabulary?.lesson_id;
 
     if (lessonCompare !== 0) {
       return lessonCompare;
@@ -166,6 +166,34 @@ function QuizPage() {
   });
 
   const currentQuestion = quizQuestions[currentIndex];
+
+  const generateOptions = (question) => {
+    if (!question) {
+      return [];
+    }
+
+    const correctAnswer = question.correct_answer;
+
+    const wrongAnswers = questions
+      .filter((item) => {
+        return (
+          item.question_id !== question.question_id &&
+          item.correct_answer &&
+          normalizeText(item.correct_answer) !== normalizeText(correctAnswer)
+        );
+      })
+      .map((item) => item.correct_answer);
+
+    const uniqueWrongAnswers = [...new Set(wrongAnswers)];
+
+    const shuffledWrongAnswers = uniqueWrongAnswers.sort(
+      () => Math.random() - 0.5
+    );
+
+    const options = [correctAnswer, ...shuffledWrongAnswers.slice(0, 3)];
+
+    return options.sort(() => Math.random() - 0.5);
+  };
 
   const handleChangeLevel = (e) => {
     setSelectedLevel(e.target.value);
@@ -186,6 +214,8 @@ function QuizPage() {
       setSessionId(sessionRes.data.data.session_id);
 
       setQuizQuestions(sortedQuestions);
+      setCurrentOptions(generateOptions(sortedQuestions[0]));
+
       setCurrentIndex(0);
       setSelectedAnswer("");
       setAnswerResult(null);
@@ -196,6 +226,27 @@ function QuizPage() {
     } catch (error) {
       setError(error.response?.data?.message || "Không thể bắt đầu phiên học");
     }
+  };
+
+  const checkAnswer = (answer) => {
+    return normalizeText(answer) === normalizeText(currentQuestion.correct_answer);
+  };
+
+  const saveAnswer = async (answer, isCorrect) => {
+    const newScore = isCorrect ? score + 1 : score;
+
+    await createQuestionResultApi({
+      session_id: sessionId,
+      question_id: currentQuestion.question_id,
+      user_answer: answer,
+    });
+
+    if (isCorrect) {
+      setScore(newScore);
+    }
+
+    setAnswerResult(isCorrect);
+    setHasAnswered(true);
   };
 
   const handleSubmitAnswer = async () => {
@@ -209,27 +260,37 @@ function QuizPage() {
       return;
     }
 
-    setError("");
+    try {
+      setError("");
 
-    const isCorrect =
-      normalizeText(selectedAnswer) ===
-      normalizeText(currentQuestion.correct_answer);
+      const isCorrect = checkAnswer(selectedAnswer);
 
-    const newScore = isCorrect ? score + 1 : score;
+      await saveAnswer(selectedAnswer, isCorrect);
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Không thể lưu kết quả câu hỏi"
+      );
+    }
+  };
+
+  const handleSelectOption = async (option) => {
+    if (hasAnswered) {
+      return;
+    }
+
+    if (!currentQuestion) {
+      setError("Không tìm thấy câu hỏi hiện tại");
+      return;
+    }
 
     try {
-      await createQuestionResultApi({
-        session_id: sessionId,
-        question_id: currentQuestion.question_id,
-        user_answer: selectedAnswer,
-      });
+      setError("");
 
-      if (isCorrect) {
-        setScore(newScore);
-      }
+      setSelectedAnswer(option);
 
-      setAnswerResult(isCorrect);
-      setHasAnswered(true);
+      const isCorrect = checkAnswer(option);
+
+      await saveAnswer(option, isCorrect);
     } catch (error) {
       setError(
         error.response?.data?.message || "Không thể lưu kết quả câu hỏi"
@@ -253,6 +314,7 @@ function QuizPage() {
     }
 
     setCurrentIndex(nextIndex);
+    setCurrentOptions(generateOptions(quizQuestions[nextIndex]));
     setSelectedAnswer("");
     setAnswerResult(null);
     setHasAnswered(false);
@@ -282,11 +344,33 @@ function QuizPage() {
     setIsStarted(false);
     setShowResult(false);
     setQuizQuestions([]);
+    setCurrentOptions([]);
     setCurrentIndex(0);
     setSelectedAnswer("");
     setAnswerResult(null);
     setHasAnswered(false);
     setSessionId(null);
+  };
+
+  const getOptionClassName = (option) => {
+    if (!hasAnswered) {
+      return styles.optionButton;
+    }
+
+    const isCorrectOption =
+      normalizeText(option) === normalizeText(currentQuestion.correct_answer);
+
+    const isSelectedOption = normalizeText(option) === normalizeText(selectedAnswer);
+
+    if (isCorrectOption) {
+      return `${styles.optionButton} ${styles.correctOption}`;
+    }
+
+    if (isSelectedOption && !isCorrectOption) {
+      return `${styles.optionButton} ${styles.wrongOption}`;
+    }
+
+    return styles.optionButton;
   };
 
   return (
@@ -300,6 +384,15 @@ function QuizPage() {
       {!loading && !isStarted && !error && (
         <div className={styles.quizCard}>
           <h2>Chọn nội dung luyện tập</h2>
+
+          <select
+            className={styles.input}
+            value={quizMode}
+            onChange={(e) => setQuizMode(e.target.value)}
+          >
+            <option value="typing">Tự luận</option>
+            <option value="multiple_choice">Trắc nghiệm</option>
+          </select>
 
           <select
             className={styles.input}
@@ -370,26 +463,44 @@ function QuizPage() {
 
           <h2 className={styles.question}>{currentQuestion.content}</h2>
 
-          <input
-            className={styles.input}
-            value={selectedAnswer}
-            onChange={(e) => setSelectedAnswer(e.target.value)}
-            placeholder="Nhập đáp án..."
-            disabled={hasAnswered}
-          />
+          {quizMode === "typing" && (
+            <input
+              className={styles.input}
+              value={selectedAnswer}
+              onChange={(e) => setSelectedAnswer(e.target.value)}
+              placeholder="Nhập đáp án..."
+              disabled={hasAnswered}
+            />
+          )}
+
+          {quizMode === "multiple_choice" && (
+            <div className={styles.optionGrid}>
+              {currentOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={getOptionClassName(option)}
+                  onClick={() => handleSelectOption(option)}
+                  disabled={hasAnswered}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
 
           {answerResult === true && (
             <p className={styles.correct}>✅ Chính xác</p>
           )}
 
-          {answerResult === false && (
+          {answerResult === false && quizMode === "typing" && (
             <p className={styles.wrong}>
               ❌ Sai. Đáp án đúng: {currentQuestion.correct_answer}
             </p>
           )}
 
           <div className={styles.actions}>
-            {!hasAnswered && (
+            {quizMode === "typing" && !hasAnswered && (
               <button
                 className={styles.submitButton}
                 onClick={handleSubmitAnswer}
