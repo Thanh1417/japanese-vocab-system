@@ -30,6 +30,9 @@ function VocabularyManagementPage() {
   const [filterLevel, setFilterLevel] = useState("");
   const [filterLessonId, setFilterLessonId] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const [formData, setFormData] = useState({
     lesson_id: "",
     word: "",
@@ -81,6 +84,42 @@ function VocabularyManagementPage() {
 
     return matchKeyword && matchLevel && matchLesson;
   });
+  const jlptOrder = {
+    N5: 1,
+    N4: 2,
+    N3: 3,
+    N2: 4,
+    N1: 5,
+  };
+
+  const sortedVocabularies = [...filteredVocabularies].sort((a, b) => {
+    const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+
+    if (levelCompare !== 0) {
+      return levelCompare;
+    }
+
+    const lessonCompare = a.lesson_id - b.lesson_id;
+
+    if (lessonCompare !== 0) {
+      return lessonCompare;
+    }
+
+    return a.vocabulary_id - b.vocabulary_id;
+  });
+
+  const totalPages = Math.ceil(sortedVocabularies.length / itemsPerPage);
+
+  const paginatedVocabularies = sortedVocabularies.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const filteredLessons = lessons
+    .filter((lesson) => {
+      return filterLevel ? lesson.jlpt_level === filterLevel : true;
+    })
+    .sort((a, b) => a.lesson_id - b.lesson_id);
 
   const resetForm = () => {
     setEditingId(null);
@@ -104,6 +143,30 @@ function VocabularyManagementPage() {
       ...formData,
       [name]: value,
     });
+  };
+
+  const handleChangeKeyword = (e) => {
+    setKeyword(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleChangeLevel = (e) => {
+    setFilterLevel(e.target.value);
+    setFilterLessonId("");
+    setCurrentPage(1);
+  };
+
+  const handleChangeLesson = (e) => {
+    setFilterLessonId(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const handleSubmit = async (e) => {
@@ -167,6 +230,14 @@ function VocabularyManagementPage() {
     }
   };
 
+  const formatLessonName = (lessonName) => {
+    if (!lessonName) {
+      return "";
+    }
+
+    return lessonName.replace("Minna no Nihongo - ", "");
+  };
+
   return (
     <MainLayout>
       <h1 className={styles.title}>Quản lý từ vựng</h1>
@@ -191,9 +262,9 @@ function VocabularyManagementPage() {
             >
               <option value="">Chọn bài học</option>
 
-              {lessons.map((lesson) => (
+              {filteredLessons.map((lesson) => (
                 <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                  {lesson.lesson_name} - {lesson.jlpt_level}
+                  {formatLessonName(lesson.lesson_name)}
                 </option>
               ))}
             </select>
@@ -223,7 +294,7 @@ function VocabularyManagementPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Nghĩa Hán tự</label>
+            <label>Hán tự</label>
 
             <input
               name="kanji_meaning"
@@ -306,14 +377,14 @@ function VocabularyManagementPage() {
         <input
           className={styles.filterInput}
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={handleChangeKeyword}
           placeholder="Tìm từ, cách đọc hoặc nghĩa..."
         />
 
         <select
           className={styles.filterSelect}
           value={filterLevel}
-          onChange={(e) => setFilterLevel(e.target.value)}
+          onChange={handleChangeLevel}
         >
           <option value="">Tất cả cấp độ</option>
           <option value="N5">N5</option>
@@ -326,69 +397,92 @@ function VocabularyManagementPage() {
         <select
           className={styles.filterSelect}
           value={filterLessonId}
-          onChange={(e) => setFilterLessonId(e.target.value)}
+          onChange={handleChangeLesson}
         >
           <option value="">Tất cả bài học</option>
 
-          {lessons.map((lesson) => (
+          {filteredLessons.map((lesson) => (
             <option key={lesson.lesson_id} value={lesson.lesson_id}>
-              {lesson.lesson_name}
+              {formatLessonName(lesson.lesson_name)}
             </option>
           ))}
         </select>
       </div>
 
       <p className={styles.resultText}>
-        Tìm thấy <strong>{filteredVocabularies.length}</strong> từ vựng
+        Tìm thấy <strong>{sortedVocabularies.length}</strong> từ vựng
       </p>
 
       {loading && <LoadingMessage />}
 
       {!loading && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Từ vựng</th>
-                <th>Cách đọc</th>
-                <th>Nghĩa</th>
-                <th>JLPT</th>
-                <th>Bài học</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredVocabularies.map((vocab) => (
-                <tr key={vocab.vocabulary_id}>
-                  <td>{vocab.vocabulary_id}</td>
-                  <td>{vocab.word}</td>
-                  <td>{vocab.reading}</td>
-                  <td>{vocab.vietnamese_meaning}</td>
-                  <td>{vocab.jlpt_level}</td>
-                  <td>{vocab.lesson?.lesson_name || vocab.lesson_id}</td>
-
-                  <td>
-                    <button
-                      className={styles.editButton}
-                      onClick={() => handleEdit(vocab)}
-                    >
-                      Sửa
-                    </button>
-
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDelete(vocab.vocabulary_id)}
-                    >
-                      Xoá
-                    </button>
-                  </td>
+        <>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Từ vựng</th>
+                  <th>Cách đọc</th>
+                  <th>Âm Hán</th>
+                  <th>Nghĩa</th>
+                  <th>JLPT</th>
+                  <th>Bài học</th>
+                  <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {paginatedVocabularies.map((vocab) => (
+                  <tr key={vocab.vocabulary_id}>
+                    <td>{vocab.vocabulary_id}</td>
+                    <td>{vocab.word}</td>
+                    <td>{vocab.reading}</td>
+                    <td>{vocab.kanji_meaning || "-"}</td>
+                    <td>{vocab.vietnamese_meaning}</td>
+                    <td>{vocab.jlpt_level}</td>
+                    <td>{formatLessonName(vocab.lesson?.lesson_name) || vocab.lesson_id}</td>
+
+                    <td>
+                      <div className={styles.actionButtons}>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => handleEdit(vocab)}
+                        >
+                          Sửa
+                        </button>
+
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDelete(vocab.vocabulary_id)}
+                        >
+                          Xoá
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.pagination}>
+            <button onClick={handlePrevPage} disabled={currentPage === 1}>
+              Trước
+            </button>
+
+            <span>
+              Trang {currentPage} / {totalPages || 1}
+            </span>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Sau
+            </button>
+          </div>
+        </>
       )}
     </MainLayout>
   );
