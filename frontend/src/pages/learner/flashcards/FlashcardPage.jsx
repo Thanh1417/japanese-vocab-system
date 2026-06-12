@@ -11,6 +11,7 @@ import styles from "./FlashcardPage.module.css";
 
 function FlashcardPage() {
   const [vocabularies, setVocabularies] = useState([]);
+  const [flashcardVocabularies, setFlashcardVocabularies] = useState([]);
   const [lessons, setLessons] = useState([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -19,8 +20,26 @@ function FlashcardPage() {
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedLessonId, setSelectedLessonId] = useState("");
 
+  const [isStarted, setIsStarted] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+
+  const [reviewStats, setReviewStats] = useState({
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const jlptOrder = {
+    N5: 1,
+    N4: 2,
+    N3: 3,
+    N2: 4,
+    N1: 5,
+  };
 
   const fetchData = async () => {
     try {
@@ -44,6 +63,29 @@ function FlashcardPage() {
     fetchData();
   }, []);
 
+  const formatLessonName = (lessonName) => {
+    if (!lessonName) {
+      return "";
+    }
+
+    return lessonName.replace("Minna no Nihongo - ", "");
+  };
+
+  const filteredLessons = lessons
+    .filter((lesson) => {
+      return selectedLevel ? lesson.jlpt_level === selectedLevel : true;
+    })
+    .sort((a, b) => {
+      const levelCompare =
+        jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+
+      if (levelCompare !== 0) {
+        return levelCompare;
+      }
+
+      return a.lesson_id - b.lesson_id;
+    });
+
   const filteredVocabularies = vocabularies.filter((vocab) => {
     const matchLevel = selectedLevel ? vocab.jlpt_level === selectedLevel : true;
 
@@ -54,10 +96,27 @@ function FlashcardPage() {
     return matchLevel && matchLesson;
   });
 
-  const currentVocabulary = filteredVocabularies[currentIndex];
+  const sortedVocabularies = [...filteredVocabularies].sort((a, b) => {
+    const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+
+    if (levelCompare !== 0) {
+      return levelCompare;
+    }
+
+    const lessonCompare = a.lesson_id - b.lesson_id;
+
+    if (lessonCompare !== 0) {
+      return lessonCompare;
+    }
+
+    return a.vocabulary_id - b.vocabulary_id;
+  });
+
+  const currentVocabulary = flashcardVocabularies[currentIndex];
 
   const handleChangeLevel = (e) => {
     setSelectedLevel(e.target.value);
+    setSelectedLessonId("");
     setCurrentIndex(0);
     setIsFlipped(false);
   };
@@ -68,18 +127,55 @@ function FlashcardPage() {
     setIsFlipped(false);
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-      setIsFlipped(false);
+  const handleStart = () => {
+    if (sortedVocabularies.length === 0) {
+      setError("Không có từ vựng phù hợp để học flashcard");
+      return;
     }
+
+    setError("");
+    setFlashcardVocabularies(sortedVocabularies);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setIsStarted(true);
+    setIsFinished(false);
+    setReviewStats({
+      again: 0,
+      hard: 0,
+      good: 0,
+      easy: 0,
+    });
   };
 
-  const handleNext = () => {
-    if (currentIndex < filteredVocabularies.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setIsFlipped(false);
+  const handleBackToSelection = () => {
+    setIsStarted(false);
+    setIsFinished(false);
+    setFlashcardVocabularies([]);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+  };
+
+  const handleFinish = () => {
+    if (!window.confirm("Bạn có chắc muốn kết thúc phiên flashcard này không?")) {
+      return;
     }
+
+    setIsFinished(true);
+  };
+
+  const handleReview = (rating) => {
+    setReviewStats((prev) => ({
+      ...prev,
+      [rating]: prev[rating] + 1,
+    }));
+
+    if (currentIndex >= flashcardVocabularies.length - 1) {
+      setIsFinished(true);
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+    setIsFlipped(false);
   };
 
   return (
@@ -90,8 +186,10 @@ function FlashcardPage() {
 
       {loading && <LoadingMessage />}
 
-      {!loading && !error && (
-        <div className={styles.filterBox}>
+      {!loading && !isStarted && !error && (
+        <div className={styles.setupCard}>
+          <h2>Chọn nội dung học flashcard</h2>
+
           <select
             className={styles.select}
             value={selectedLevel}
@@ -112,23 +210,48 @@ function FlashcardPage() {
           >
             <option value="">Tất cả bài học</option>
 
-            {lessons.map((lesson) => (
+            {filteredLessons.map((lesson) => (
               <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                {lesson.lesson_name} - {lesson.jlpt_level}
+                {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
               </option>
             ))}
           </select>
+
+          <p className={styles.message}>
+            Có {sortedVocabularies.length} từ vựng phù hợp với lựa chọn hiện tại.
+          </p>
+
+          <button className={styles.startButton} onClick={handleStart}>
+            Bắt đầu học
+          </button>
         </div>
       )}
 
-      {!loading && !error && filteredVocabularies.length === 0 && (
-        <p className={styles.message}>Không có từ vựng phù hợp.</p>
+      {!loading && isStarted && isFinished && (
+        <div className={styles.resultCard}>
+          <h2>Hoàn thành Flashcard</h2>
+
+          <p>
+            Tổng số từ đã học: <strong>{flashcardVocabularies.length}</strong>
+          </p>
+
+          <div className={styles.statsGrid}>
+            <div>Lại: {reviewStats.again}</div>
+            <div>Khó: {reviewStats.hard}</div>
+            <div>Được: {reviewStats.good}</div>
+            <div>Dễ: {reviewStats.easy}</div>
+          </div>
+
+          <button className={styles.startButton} onClick={handleBackToSelection}>
+            Quay lại chọn bài
+          </button>
+        </div>
       )}
 
-      {!loading && !error && currentVocabulary && (
+      {!loading && isStarted && !isFinished && currentVocabulary && (
         <>
           <p className={styles.progress}>
-            {currentIndex + 1} / {filteredVocabularies.length}
+            {currentIndex + 1} / {flashcardVocabularies.length}
           </p>
 
           <div
@@ -138,9 +261,11 @@ function FlashcardPage() {
             {!isFlipped ? (
               <div className={styles.cardContent}>
                 <h2 className={styles.word}>{currentVocabulary.word}</h2>
+
                 <p className={styles.reading}>
                   {currentVocabulary.reading || "Chưa có cách đọc"}
                 </p>
+
                 <span className={styles.hint}>Click để xem nghĩa</span>
               </div>
             ) : (
@@ -148,6 +273,10 @@ function FlashcardPage() {
                 <h2 className={styles.meaning}>
                   {currentVocabulary.vietnamese_meaning}
                 </h2>
+
+                <p className={styles.kanji}>
+                  Âm Hán: {currentVocabulary.kanji_meaning || "-"}
+                </p>
 
                 <p className={styles.example}>
                   {currentVocabulary.example_sentence || "Chưa có ví dụ"}
@@ -158,23 +287,39 @@ function FlashcardPage() {
             )}
           </div>
 
-          <div className={styles.actions}>
+          <div className={styles.reviewActions}>
             <button
-              className={styles.button}
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
+              className={`${styles.reviewButton} ${styles.againButton}`}
+              onClick={() => handleReview("again")}
             >
-              Trước
+              Lại
             </button>
 
             <button
-              className={styles.button}
-              onClick={handleNext}
-              disabled={currentIndex === filteredVocabularies.length - 1}
+              className={`${styles.reviewButton} ${styles.hardButton}`}
+              onClick={() => handleReview("hard")}
             >
-              Tiếp theo
+              Khó
+            </button>
+
+            <button
+              className={`${styles.reviewButton} ${styles.goodButton}`}
+              onClick={() => handleReview("good")}
+            >
+              Được
+            </button>
+
+            <button
+              className={`${styles.reviewButton} ${styles.easyButton}`}
+              onClick={() => handleReview("easy")}
+            >
+              Dễ
             </button>
           </div>
+
+          <button className={styles.finishButton} onClick={handleFinish}>
+            Kết thúc phiên học
+          </button>
         </>
       )}
     </MainLayout>
