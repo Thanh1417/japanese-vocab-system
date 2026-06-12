@@ -52,3 +52,29 @@
   box-shadow: var(--shadow-card);
   max-width: 500px;
 }
+
+.correct {
+  color: #16a34a;
+  font-weight: 600;
+  margin: 12px 0;
+}
+
+.wrong {
+  color: #dc2626;
+  font-weight: 600;
+  margin: 12px 0;
+}
+
+.cancelButton {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: #e5e7eb;
+  color: var(--color-text);
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.cancelButton:hover {
+  opacity: 0.9;
+}
