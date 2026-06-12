@@ -31,6 +31,9 @@ function QuestionManagementPage() {
   const [filterType, setFilterType] = useState("");
   const [filterLevel, setFilterLevel] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 24;
+
   const [formData, setFormData] = useState({
     vocabulary_id: "",
     content: "",
@@ -48,12 +51,10 @@ function QuestionManagementPage() {
       ]);
 
       setQuestions(questionRes.data.data || questionRes.data);
-
       setVocabularies(vocabularyRes.data.data || vocabularyRes.data);
     } catch (error) {
       setError(
-        error.response?.data?.message ||
-          "Không thể tải dữ liệu câu hỏi"
+        error.response?.data?.message || "Không thể tải dữ liệu câu hỏi"
       );
     } finally {
       setLoading(false);
@@ -82,6 +83,77 @@ function QuestionManagementPage() {
 
     return matchKeyword && matchType && matchLevel;
   });
+
+  const jlptOrder = {
+    N5: 1,
+    N4: 2,
+    N3: 3,
+    N2: 4,
+    N1: 5,
+  };
+
+  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
+    const levelCompare =
+      jlptOrder[a.vocabulary?.jlpt_level] -
+      jlptOrder[b.vocabulary?.jlpt_level];
+
+    if (levelCompare !== 0) {
+      return levelCompare;
+    }
+
+    const vocabularyCompare = a.vocabulary_id - b.vocabulary_id;
+
+    if (vocabularyCompare !== 0) {
+      return vocabularyCompare;
+    }
+
+    return a.question_id - b.question_id;
+  });
+
+  const totalPages = Math.ceil(sortedQuestions.length / itemsPerPage);
+
+  const paginatedQuestions = sortedQuestions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const filteredVocabulariesForForm = vocabularies
+    .filter((vocab) => {
+      return filterLevel ? vocab.jlpt_level === filterLevel : true;
+    })
+    .sort((a, b) => {
+      const levelCompare =
+        jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+
+      if (levelCompare !== 0) {
+        return levelCompare;
+      }
+
+      return a.vocabulary_id - b.vocabulary_id;
+    });
+
+  const handleChangeKeyword = (e) => {
+    setKeyword(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleChangeType = (e) => {
+    setFilterType(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleChangeLevel = (e) => {
+    setFilterLevel(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
 
   const resetForm = () => {
     setEditingId(null);
@@ -117,22 +189,16 @@ function QuestionManagementPage() {
 
       if (editingId) {
         await updateQuestionApi(editingId, payload);
-
         setSuccess("Cập nhật câu hỏi thành công");
       } else {
         await createQuestionApi(payload);
-
         setSuccess("Thêm câu hỏi thành công");
       }
 
       resetForm();
-
       fetchData();
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Lưu câu hỏi thất bại"
-      );
+      setError(error.response?.data?.message || "Lưu câu hỏi thất bại");
     }
   };
 
@@ -162,31 +228,20 @@ function QuestionManagementPage() {
 
       fetchData();
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Xoá câu hỏi thất bại"
-      );
+      setError(error.response?.data?.message || "Xoá câu hỏi thất bại");
     }
   };
 
   return (
     <MainLayout>
-      <h1 className={styles.title}>
-        Quản lý câu hỏi
-      </h1>
+      <h1 className={styles.title}>Quản lý câu hỏi</h1>
 
       <ErrorMessage message={error} />
-
       <SuccessMessage message={success} />
 
-      <form
-        className={styles.form}
-        onSubmit={handleSubmit}
-      >
+      <form className={styles.form} onSubmit={handleSubmit}>
         <h2 className={styles.formTitle}>
-          {editingId
-            ? "Cập nhật câu hỏi"
-            : "Thêm câu hỏi"}
+          {editingId ? "Cập nhật câu hỏi" : "Thêm câu hỏi"}
         </h2>
 
         <div className={styles.formGrid}>
@@ -199,16 +254,11 @@ function QuestionManagementPage() {
               onChange={handleChange}
               required
             >
-              <option value="">
-                Chọn từ vựng
-              </option>
+              <option value="">Chọn từ vựng</option>
 
-              {vocabularies.map((vocab) => (
-                <option
-                  key={vocab.vocabulary_id}
-                  value={vocab.vocabulary_id}
-                >
-                  {vocab.word}
+              {filteredVocabulariesForForm.map((vocab) => (
+                <option key={vocab.vocabulary_id} value={vocab.vocabulary_id}>
+                  {vocab.word} - {vocab.jlpt_level}
                 </option>
               ))}
             </select>
@@ -222,20 +272,13 @@ function QuestionManagementPage() {
               value={formData.question_type}
               onChange={handleChange}
             >
-              <option value="typing">
-                Typing
-              </option>
-
-              <option value="multiple_choice">
-                Multiple Choice
-              </option>
+              <option value="typing">Typing</option>
+              <option value="multiple_choice">Multiple Choice</option>
             </select>
           </div>
 
           <div className={styles.formGroupFull}>
-            <label>
-              Nội dung câu hỏi
-            </label>
+            <label>Nội dung câu hỏi</label>
 
             <textarea
               name="content"
@@ -259,13 +302,8 @@ function QuestionManagementPage() {
         </div>
 
         <div className={styles.actions}>
-          <button
-            className={styles.submitButton}
-            type="submit"
-          >
-            {editingId
-              ? "Cập nhật"
-              : "Thêm câu hỏi"}
+          <button className={styles.submitButton} type="submit">
+            {editingId ? "Cập nhật" : "Thêm câu hỏi"}
           </button>
 
           {editingId && (
@@ -284,43 +322,26 @@ function QuestionManagementPage() {
         <input
           className={styles.filterInput}
           value={keyword}
-          onChange={(e) =>
-            setKeyword(e.target.value)
-          }
+          onChange={handleChangeKeyword}
           placeholder="Tìm câu hỏi, đáp án hoặc từ vựng..."
         />
 
         <select
           className={styles.filterSelect}
           value={filterType}
-          onChange={(e) =>
-            setFilterType(e.target.value)
-          }
+          onChange={handleChangeType}
         >
-          <option value="">
-            Tất cả loại câu hỏi
-          </option>
-
-          <option value="typing">
-            Typing
-          </option>
-
-          <option value="multiple_choice">
-            Multiple Choice
-          </option>
+          <option value="">Tất cả loại câu hỏi</option>
+          <option value="typing">Typing</option>
+          <option value="multiple_choice">Multiple Choice</option>
         </select>
 
         <select
           className={styles.filterSelect}
           value={filterLevel}
-          onChange={(e) =>
-            setFilterLevel(e.target.value)
-          }
+          onChange={handleChangeLevel}
         >
-          <option value="">
-            Tất cả cấp độ
-          </option>
-
+          <option value="">Tất cả cấp độ</option>
           <option value="N5">N5</option>
           <option value="N4">N4</option>
           <option value="N3">N3</option>
@@ -330,107 +351,77 @@ function QuestionManagementPage() {
       </div>
 
       <p className={styles.resultText}>
-        Tìm thấy{" "}
-        <strong>
-          {filteredQuestions.length}
-        </strong>{" "}
-        câu hỏi
+        Tìm thấy <strong>{sortedQuestions.length}</strong> câu hỏi
       </p>
 
       {loading && <LoadingMessage />}
 
       {!loading && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Từ vựng</th>
-                <th>Nội dung</th>
-                <th>Đáp án</th>
-                <th>Loại</th>
-                <th>JLPT</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
+        <>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Từ vựng</th>
+                  <th>Nội dung</th>
+                  <th>Đáp án</th>
+                  <th>Loại</th>
+                  <th>JLPT</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {filteredQuestions.map(
-                (question) => (
-                  <tr
-                    key={
-                      question.question_id
-                    }
-                  >
-                    <td>
-                      {
-                        question.question_id
-                      }
-                    </td>
+              <tbody>
+                {paginatedQuestions.map((question) => (
+                  <tr key={question.question_id}>
+                    <td>{question.question_id}</td>
+                    <td>{question.vocabulary?.word}</td>
+                    <td>{question.content}</td>
+                    <td>{question.correct_answer}</td>
+                    <td>{question.question_type}</td>
+                    <td>{question.vocabulary?.jlpt_level}</td>
 
                     <td>
-                      {
-                        question.vocabulary
-                          ?.word
-                      }
-                    </td>
+                      <div className={styles.actionButtons}>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => handleEdit(question)}
+                        >
+                          Sửa
+                        </button>
 
-                    <td>
-                      {question.content}
-                    </td>
-
-                    <td>
-                      {
-                        question.correct_answer
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        question.question_type
-                      }
-                    </td>
-
-                    <td>
-                      {
-                        question.vocabulary
-                          ?.jlpt_level
-                      }
-                    </td>
-
-                    <td>
-                      <button
-                        className={
-                          styles.editButton
-                        }
-                        onClick={() =>
-                          handleEdit(
-                            question
-                          )
-                        }
-                      >
-                        Sửa
-                      </button>
-
-                      <button
-                        className={
-                          styles.deleteButton
-                        }
-                        onClick={() =>
-                          handleDelete(
-                            question.question_id
-                          )
-                        }
-                      >
-                        Xoá
-                      </button>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDelete(question.question_id)}
+                        >
+                          Xoá
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.pagination}>
+            <button onClick={handlePrevPage} disabled={currentPage === 1}>
+              Trước
+            </button>
+
+            <span>
+              Trang {currentPage} / {totalPages || 1}
+            </span>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Sau
+            </button>
+          </div>
+        </>
       )}
     </MainLayout>
   );
