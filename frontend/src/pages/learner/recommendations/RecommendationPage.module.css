@@ -4,83 +4,87 @@
 }
 
 .description {
-  max-width: 760px;
+  max-width: 820px;
   color: var(--color-muted);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   line-height: 1.6;
 }
 
-.message {
+.message,
+.resultText {
   color: var(--color-muted);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+.studyActions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.card {
+.studyActions button {
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: white;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tableWrapper {
   background: var(--color-white);
-  padding: 20px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
-.cardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.word {
-  margin: 0;
-  font-size: 28px;
+.table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 14px;
+  color: var(--color-muted);
+  font-size: 14px;
 }
 
-.level {
+.table td {
+  padding: 14px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.priority {
   padding: 4px 10px;
   border-radius: 999px;
-  background: #e0f2fe;
-  color: #0369a1;
   font-size: 13px;
   font-weight: 600;
 }
 
-.info {
-  margin: 8px 0;
-  line-height: 1.5;
+.high {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.example {
-  margin-top: 12px;
-  padding: 12px;
-  border-left: 4px solid var(--color-primary);
-  background: #f8fafc;
-  color: var(--color-muted);
-}
-
-.reasonBox {
-  margin-top: 14px;
-  padding: 12px;
-  border-radius: var(--radius-md);
+.medium {
   background: #fef3c7;
   color: #92400e;
-  line-height: 1.5;
 }
 
-@media (max-width: 1024px) {
-  .grid,
-  .cardGrid {
-    grid-template-columns: repeat(2, 1fr);
+.low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+@media (max-width: 768px) {
+  .studyActions {
+    flex-direction: column;
   }
-}
 
-@media (max-width: 640px) {
-  .grid,
-  .cardGrid {
-    grid-template-columns: 1fr;
+  .tableWrapper {
+    overflow-x: auto;
   }
 }

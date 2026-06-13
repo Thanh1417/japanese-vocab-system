@@ -12,6 +12,7 @@ import {
 
 import { getAllLessonsApi } from "../../../api/lessonApi";
 import { getGoalDayDetailApi } from "../../../api/studyGoalApi";
+import { getRecommendationsApi } from "../../../api/recommendationApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -25,6 +26,8 @@ function QuizPage() {
   const goalId = searchParams.get("goalId");
   const day = searchParams.get("day");
   const mode = searchParams.get("mode");
+  const source = searchParams.get("source");
+  const isRecommendationMode = source === "recommendation";
 
   const isGoalDayMode = goalId && day;
 
@@ -72,6 +75,24 @@ function QuizPage() {
 
       const questionRes = await getQuizQuestionsApi();
       const allQuestions = questionRes.data.data || questionRes.data;
+
+      if (isRecommendationMode) {
+        const recommendationRes = await getRecommendationsApi();
+        const recommendationData = recommendationRes.data.data || recommendationRes.data;
+
+        const recommendationVocabularyIds = recommendationData.map(
+          (item) => item.vocabulary_id
+        );
+
+        const recommendationQuestions = allQuestions.filter((question) =>
+          recommendationVocabularyIds.includes(question.vocabulary_id)
+        );
+
+        setQuestions(recommendationQuestions);
+        setLessons([]);
+
+        return;
+      }
 
       if (isGoalDayMode) {
         const dayRes = await getGoalDayDetailApi(goalId, day);
@@ -423,7 +444,9 @@ function QuizPage() {
           <h2>
             {isGoalDayMode
               ? `Luyện tập ngày ${day}`
-              : "Chọn nội dung luyện tập"}
+              : isRecommendationMode
+                ? "Luyện tập theo gợi ý"
+                : "Chọn nội dung luyện tập"}
           </h2>
 
           <select
@@ -436,7 +459,7 @@ function QuizPage() {
             <option value="multiple_choice">Trắc nghiệm</option>
           </select>
 
-          {!isGoalDayMode && (
+          {!isGoalDayMode && !isRecommendationMode && (
             <>
               <select
                 className={styles.input}

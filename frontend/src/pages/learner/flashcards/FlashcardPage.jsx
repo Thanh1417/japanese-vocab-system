@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
 import MainLayout from "../../../layouts/MainLayout";
-import { getFlashcardVocabulariesApi } from "../../../api/vocabularyApi";
-import { getAllLessonsApi } from "../../../api/lessonApi";
 import { submitSrsReviewApi } from "../../../api/srsApi";
 import { useLocation } from "react-router-dom";
 import { getGoalDayDetailApi } from "../../../api/studyGoalApi";
+import { getAllLessonsApi } from "../../../api/lessonApi";
+import { getFlashcardVocabulariesApi } from "../../../api/vocabularyApi";
+import { getRecommendationsApi } from "../../../api/recommendationApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -21,6 +22,10 @@ function FlashcardPage() {
   const day = searchParams.get("day");
 
   const isGoalDayMode = goalId && day;
+
+  const source = searchParams.get("source");
+
+  const isRecommendationMode = source === "recommendation";
 
   const [vocabularies, setVocabularies] = useState([]);
   const [flashcardVocabularies, setFlashcardVocabularies] = useState([]);
@@ -62,6 +67,15 @@ function FlashcardPage() {
         const data = res.data.data || res.data;
 
         setVocabularies(data.words || []);
+        setLessons([]);
+        return;
+      }
+
+      if (isRecommendationMode) {
+        const res = await getRecommendationsApi();
+        const data = res.data.data || res.data;
+
+        setVocabularies(data);
         setLessons([]);
         return;
       }
@@ -228,9 +242,15 @@ function FlashcardPage() {
 
       {!loading && !isStarted && !error && (
         <div className={styles.setupCard}>
-          <h2>Chọn nội dung học flashcard</h2>
+          <h2>
+            {isGoalDayMode
+              ? `Flashcard ngày ${day}`
+              : isRecommendationMode
+                ? "Flashcard theo gợi ý"
+                : "Chọn nội dung học flashcard"}
+          </h2>
 
-          {!isGoalDayMode && (
+          {!isGoalDayMode && !isRecommendationMode && (
             <>
               <select
                 className={styles.select}
