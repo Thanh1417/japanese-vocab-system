@@ -77,6 +77,10 @@ function AppSidebar() {
               Gợi ý học tập
             </NavLink>
 
+            <NavLink to="/study-goals" className={getLinkClass}>
+              Mục tiêu học tập
+            </NavLink>
+
             <NavLink to="/study-sessions" className={getLinkClass}>
               Lịch sử học
             </NavLink>

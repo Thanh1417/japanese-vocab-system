@@ -4,6 +4,8 @@ import MainLayout from "../../../layouts/MainLayout";
 import { getFlashcardVocabulariesApi } from "../../../api/vocabularyApi";
 import { getAllLessonsApi } from "../../../api/lessonApi";
 import { submitSrsReviewApi } from "../../../api/srsApi";
+import { useLocation } from "react-router-dom";
+import { getGoalDayDetailApi } from "../../../api/studyGoalApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -11,6 +13,15 @@ import ErrorMessage from "../../../components/common/ErrorMessage";
 import styles from "./FlashcardPage.module.css";
 
 function FlashcardPage() {
+
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const goalId = searchParams.get("goalId");
+  const day = searchParams.get("day");
+
+  const isGoalDayMode = goalId && day;
+
   const [vocabularies, setVocabularies] = useState([]);
   const [flashcardVocabularies, setFlashcardVocabularies] = useState([]);
   const [lessons, setLessons] = useState([]);
@@ -45,6 +56,15 @@ function FlashcardPage() {
   const fetchData = async () => {
     try {
       setError("");
+
+      if (isGoalDayMode) {
+        const res = await getGoalDayDetailApi(goalId, day);
+        const data = res.data.data || res.data;
+
+        setVocabularies(data.words || []);
+        setLessons([]);
+        return;
+      }
 
       const [vocabRes, lessonRes] = await Promise.all([
         getFlashcardVocabulariesApi(),
@@ -210,35 +230,39 @@ function FlashcardPage() {
         <div className={styles.setupCard}>
           <h2>Chọn nội dung học flashcard</h2>
 
-          <select
-            className={styles.select}
-            value={selectedLevel}
-            onChange={handleChangeLevel}
-          >
-            <option value="">Tất cả cấp độ</option>
-            <option value="N5">N5</option>
-            <option value="N4">N4</option>
-            <option value="N3">N3</option>
-            <option value="N2">N2</option>
-            <option value="N1">N1</option>
-          </select>
+          {!isGoalDayMode && (
+            <>
+              <select
+                className={styles.select}
+                value={selectedLevel}
+                onChange={handleChangeLevel}
+              >
+                <option value="">Tất cả cấp độ</option>
+                <option value="N5">N5</option>
+                <option value="N4">N4</option>
+                <option value="N3">N3</option>
+                <option value="N2">N2</option>
+                <option value="N1">N1</option>
+              </select>
 
-          <select
-            className={styles.select}
-            value={selectedLessonId}
-            onChange={handleChangeLesson}
-          >
-            <option value="">Tất cả bài học</option>
+              <select
+                className={styles.select}
+                value={selectedLessonId}
+                onChange={handleChangeLesson}
+              >
+                <option value="">Tất cả bài học</option>
 
-            {filteredLessons.map((lesson) => (
-              <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
-              </option>
-            ))}
-          </select>
+                {filteredLessons.map((lesson) => (
+                  <option key={lesson.lesson_id} value={lesson.lesson_id}>
+                    {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
 
           <p className={styles.message}>
-            Có {sortedVocabularies.length} từ vựng phù hợp với lựa chọn hiện tại.
+            Có {sortedVocabularies.length} từ vựng trong phiên học này
           </p>
 
           <button className={styles.startButton} onClick={handleStart}>

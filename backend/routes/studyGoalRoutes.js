@@ -9,6 +9,7 @@ router.get("/active", verifyToken, studyGoalController.getActiveGoal);
 router.post("/", verifyToken, studyGoalController.createGoal);
 router.put("/:goalId", verifyToken, studyGoalController.updateGoal);
 router.delete("/:goalId", verifyToken, studyGoalController.deleteGoal);
+router.get("/:goalId/day/:dayNumber", verifyToken, studyGoalController.getGoalDayDetail);
 router.get("/:goalId/daily-plan", verifyToken, studyGoalController.getGoalDailyPlan);
 
 module.exports = router;

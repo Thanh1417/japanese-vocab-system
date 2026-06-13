@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import MainLayout from "../../../layouts/MainLayout";
 
@@ -10,6 +11,7 @@ import {
 } from "../../../api/quizApi";
 
 import { getAllLessonsApi } from "../../../api/lessonApi";
+import { getGoalDayDetailApi } from "../../../api/studyGoalApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -17,6 +19,15 @@ import ErrorMessage from "../../../components/common/ErrorMessage";
 import styles from "./QuizPage.module.css";
 
 function QuizPage() {
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const goalId = searchParams.get("goalId");
+  const day = searchParams.get("day");
+  const mode = searchParams.get("mode");
+
+  const isGoalDayMode = goalId && day;
+
   const [questions, setQuestions] = useState([]);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [lessons, setLessons] = useState([]);
@@ -38,7 +49,7 @@ function QuizPage() {
 
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedLessonId, setSelectedLessonId] = useState("");
-  const [quizMode, setQuizMode] = useState("typing");
+  const [quizMode, setQuizMode] = useState(mode || "typing");
 
   const [isStarted, setIsStarted] = useState(false);
 
@@ -59,12 +70,29 @@ function QuizPage() {
     try {
       setError("");
 
-      const [questionRes, lessonRes] = await Promise.all([
-        getQuizQuestionsApi(),
-        getAllLessonsApi(),
-      ]);
+      const questionRes = await getQuizQuestionsApi();
+      const allQuestions = questionRes.data.data || questionRes.data;
 
-      setQuestions(questionRes.data.data || questionRes.data);
+      if (isGoalDayMode) {
+        const dayRes = await getGoalDayDetailApi(goalId, day);
+        const dayData = dayRes.data.data || dayRes.data;
+        const dayWords = dayData.words || [];
+
+        const dayVocabularyIds = dayWords.map((word) => word.vocabulary_id);
+
+        const dayQuestions = allQuestions.filter((question) =>
+          dayVocabularyIds.includes(question.vocabulary_id)
+        );
+
+        setQuestions(dayQuestions);
+        setLessons([]);
+
+        return;
+      }
+
+      const lessonRes = await getAllLessonsApi();
+
+      setQuestions(allQuestions);
       setLessons(lessonRes.data.data || lessonRes.data);
     } catch (error) {
       setError(error.response?.data?.message || "Không thể tải dữ liệu quiz");
@@ -75,7 +103,13 @@ function QuizPage() {
 
   useEffect(() => {
     fetchQuizData();
-  }, []);
+  }, [goalId, day]);
+
+  useEffect(() => {
+    if (mode) {
+      setQuizMode(mode);
+    }
+  }, [mode]);
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
@@ -229,7 +263,9 @@ function QuizPage() {
   };
 
   const checkAnswer = (answer) => {
-    return normalizeText(answer) === normalizeText(currentQuestion.correct_answer);
+    return (
+      normalizeText(answer) === normalizeText(currentQuestion.correct_answer)
+    );
   };
 
   const saveAnswer = async (answer, isCorrect) => {
@@ -360,7 +396,8 @@ function QuizPage() {
     const isCorrectOption =
       normalizeText(option) === normalizeText(currentQuestion.correct_answer);
 
-    const isSelectedOption = normalizeText(option) === normalizeText(selectedAnswer);
+    const isSelectedOption =
+      normalizeText(option) === normalizeText(selectedAnswer);
 
     if (isCorrectOption) {
       return `${styles.optionButton} ${styles.correctOption}`;
@@ -383,46 +420,55 @@ function QuizPage() {
 
       {!loading && !isStarted && !error && (
         <div className={styles.quizCard}>
-          <h2>Chọn nội dung luyện tập</h2>
+          <h2>
+            {isGoalDayMode
+              ? `Luyện tập ngày ${day}`
+              : "Chọn nội dung luyện tập"}
+          </h2>
 
           <select
             className={styles.input}
             value={quizMode}
             onChange={(e) => setQuizMode(e.target.value)}
+            disabled={isGoalDayMode}
           >
             <option value="typing">Tự luận</option>
             <option value="multiple_choice">Trắc nghiệm</option>
           </select>
 
-          <select
-            className={styles.input}
-            value={selectedLevel}
-            onChange={handleChangeLevel}
-          >
-            <option value="">Tất cả cấp độ</option>
-            <option value="N5">N5</option>
-            <option value="N4">N4</option>
-            <option value="N3">N3</option>
-            <option value="N2">N2</option>
-            <option value="N1">N1</option>
-          </select>
+          {!isGoalDayMode && (
+            <>
+              <select
+                className={styles.input}
+                value={selectedLevel}
+                onChange={handleChangeLevel}
+              >
+                <option value="">Tất cả cấp độ</option>
+                <option value="N5">N5</option>
+                <option value="N4">N4</option>
+                <option value="N3">N3</option>
+                <option value="N2">N2</option>
+                <option value="N1">N1</option>
+              </select>
 
-          <select
-            className={styles.input}
-            value={selectedLessonId}
-            onChange={(e) => setSelectedLessonId(e.target.value)}
-          >
-            <option value="">Tất cả bài học</option>
+              <select
+                className={styles.input}
+                value={selectedLessonId}
+                onChange={(e) => setSelectedLessonId(e.target.value)}
+              >
+                <option value="">Tất cả bài học</option>
 
-            {filteredLessons.map((lesson) => (
-              <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
-              </option>
-            ))}
-          </select>
+                {filteredLessons.map((lesson) => (
+                  <option key={lesson.lesson_id} value={lesson.lesson_id}>
+                    {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
 
           <p className={styles.message}>
-            Có {sortedQuestions.length} câu hỏi phù hợp với lựa chọn hiện tại.
+            Có {sortedQuestions.length} câu hỏi trong phiên học này.
           </p>
 
           <div className={styles.actions}>
@@ -434,7 +480,7 @@ function QuizPage() {
       )}
 
       {!loading && isStarted && quizQuestions.length === 0 && (
-        <p className={styles.message}>Chưa có câu hỏi cho cấp độ này</p>
+        <p className={styles.message}>Chưa có câu hỏi cho nội dung này</p>
       )}
 
       {!loading && showResult && (

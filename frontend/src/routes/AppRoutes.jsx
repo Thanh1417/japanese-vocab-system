@@ -24,6 +24,9 @@ import StudySessionListPage from "../pages/learner/studySessions/StudySessionLis
 import StudySessionDetailPage from "../pages/learner/studySessions/StudySessionDetailPage";
 import RecommendationPage from "../pages/learner/recommendations/RecommendationPage";
 import FlashcardPage from "../pages/learner/flashcards/FlashcardPage";
+import StudyGoalPage from "../pages/learner/studyGoals/StudyGoalPage";
+import GoalDayDetailPage from "../pages/learner/studyGoals/GoalDayDetailPage";
+
 
 function AppRoutes() {
   return (
@@ -161,6 +164,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecommendationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/study-goals"
+        element={
+          <ProtectedRoute>
+            <StudyGoalPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/study-goals/:goalId/day/:dayNumber"
+        element={
+          <ProtectedRoute>
+            <GoalDayDetailPage />
           </ProtectedRoute>
         }
       />

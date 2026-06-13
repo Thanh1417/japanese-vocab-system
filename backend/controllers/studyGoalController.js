@@ -109,11 +109,34 @@ const getGoalDailyPlan = async (req, res) => {
   }
 };
 
+const getGoalDayDetail = async (req, res) => {
+  try {
+    const account_id = req.user.account_id;
+    const { goalId, dayNumber } = req.params;
+
+    const result = await studyGoalService.getGoalDayDetail(
+      account_id,
+      goalId,
+      dayNumber
+    );
+
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Loi server!",
+    });
+  }
+};
+
 module.exports = {
   getMyGoals,
   getActiveGoal,
   createGoal,
   updateGoal,
   deleteGoal,
+  getGoalDayDetail,
   getGoalDailyPlan,
 };

@@ -1,0 +1,175 @@
+.title {
+  margin: 0 0 12px;
+  font-size: 32px;
+}
+
+.description {
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.message {
+  color: var(--color-muted);
+}
+
+.form {
+  background: var(--color-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.formTitle {
+  margin-bottom: 18px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup input,
+.formGroup select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.actions,
+.cardActions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+}
+
+.submitButton,
+.cancelButton,
+.viewButton,
+.editButton,
+.deleteButton {
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 9px 12px;
+}
+
+.submitButton,
+.viewButton {
+  background: var(--color-primary);
+  color: white;
+}
+
+.cancelButton {
+  background: #e5e7eb;
+}
+
+.editButton {
+  background: #f59e0b;
+  color: white;
+}
+
+.deleteButton {
+  background: #ef4444;
+  color: white;
+}
+
+.goalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.goalCard {
+  background: var(--color-white);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.goalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.goalHeader h2 {
+  margin: 0;
+}
+
+.level {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.planSection {
+  margin-top: 28px;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.planCard {
+  background: var(--color-white);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.planHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.planHeader h3 {
+  margin: 0;
+}
+
+.planCard ul {
+  padding-left: 18px;
+  color: var(--color-muted);
+}
+
+.moreText {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.planCard {
+  cursor: pointer;
+}
+
+.planCard:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .goalGrid,
+  .planGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .formGrid,
+  .goalGrid,
+  .planGrid {
+    grid-template-columns: 1fr;
+  }
+}
