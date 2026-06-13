@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
 
-export const getDashboardOverviewApi = () => {
-  return axiosClient.get("/dashboard/overview");
+export const getDashboardOverviewApi = (range = 30) => {
+  return axiosClient.get(`/dashboard/overview?range=${range}`);
 };

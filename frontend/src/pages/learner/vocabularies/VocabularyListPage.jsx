@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
+
 import MainLayout from "../../../layouts/MainLayout";
 import { getAllVocabulariesApi } from "../../../api/vocabularyApi";
+import {
+  getMyFavoritesApi,
+  addFavoriteVocabularyApi,
+  removeFavoriteVocabularyApi,
+} from "../../../api/favoriteApi";
+
 import VocabularyCard from "../../../components/vocabulary/VocabularyCard";
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+
 import styles from "./VocabularyListPage.module.css";
 
 function VocabularyListPage() {
   const [vocabularies, setVocabularies] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -17,13 +26,25 @@ function VocabularyListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
-  const fetchVocabularies = async () => {
+  const fetchData = async () => {
     try {
       setError("");
 
-      const res = await getAllVocabulariesApi();
+      const [vocabRes, favoriteRes] = await Promise.all([
+        getAllVocabulariesApi(),
+        getMyFavoritesApi(),
+      ]);
 
-      setVocabularies(res.data.data || res.data);
+      const vocabData = vocabRes.data.data || vocabRes.data;
+      const favoriteData = favoriteRes.data.data || favoriteRes.data;
+
+      const ids = favoriteData.map((item) => {
+        const vocab = item.vocabulary || item;
+        return vocab.vocabulary_id;
+      });
+
+      setVocabularies(vocabData);
+      setFavoriteIds(ids);
     } catch (error) {
       setError(
         error.response?.data?.message || "Không thể tải danh sách từ vựng"
@@ -34,8 +55,28 @@ function VocabularyListPage() {
   };
 
   useEffect(() => {
-    fetchVocabularies();
+    fetchData();
   }, []);
+
+  const handleToggleFavorite = async (vocabularyId) => {
+    try {
+      if (favoriteIds.includes(vocabularyId)) {
+        await removeFavoriteVocabularyApi(vocabularyId);
+
+        setFavoriteIds((prev) =>
+          prev.filter((id) => id !== vocabularyId)
+        );
+      } else {
+        await addFavoriteVocabularyApi(vocabularyId);
+
+        setFavoriteIds((prev) => [...prev, vocabularyId]);
+      }
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Cập nhật yêu thích thất bại"
+      );
+    }
+  };
 
   const filteredVocabularies = vocabularies.filter((vocab) => {
     const searchText = keyword.toLowerCase();
@@ -139,7 +180,12 @@ function VocabularyListPage() {
         <>
           <div className={styles.grid}>
             {paginatedVocabularies.map((vocab) => (
-              <VocabularyCard key={vocab.vocabulary_id} vocabulary={vocab} />
+              <VocabularyCard
+                key={vocab.vocabulary_id}
+                vocabulary={vocab}
+                isFavorite={favoriteIds.includes(vocab.vocabulary_id)}
+                onToggleFavorite={handleToggleFavorite}
+              />
             ))}
           </div>
 

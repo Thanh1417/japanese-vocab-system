@@ -14,14 +14,16 @@ function DashboardPage() {
   const navigate = useNavigate();
 
   const [statistics, setStatistics] = useState(null);
+  const [range, setRange] = useState("30");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchDashboard = async () => {
     try {
       setError("");
+      setLoading(true);
 
-      const res = await getDashboardOverviewApi();
+      const res = await getDashboardOverviewApi(range);
       setStatistics(res.data.data || res.data);
     } catch (error) {
       setError(error.response?.data?.message || "Không thể tải dashboard");
@@ -32,19 +34,46 @@ function DashboardPage() {
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+  }, [range]);
 
   const getHeatLevel = (count) => {
     if (count === 0) return styles.level0;
     if (count === 1) return styles.level1;
-    if (count === 2) return styles.level2;
-    if (count <= 4) return styles.level3;
+    if (count <= 3) return styles.level2;
+    if (count <= 6) return styles.level3;
     return styles.level4;
   };
 
+  const maxQuestions = Math.max(
+    ...(statistics?.dailyStats || []).map((item) => item.questions),
+    1
+  );
+
+  const maxLevelCount = Math.max(
+    ...(statistics?.levelStats || []).map((item) => item.count),
+    1
+  );
+
   return (
     <MainLayout>
-      <h1 className={styles.title}>Dashboard học tập</h1>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Thống kê học tập</h1>
+          <p className={styles.subtitle}>
+            Theo dõi tiến độ học từ vựng, quiz, SRS và mục tiêu học tập cá nhân.
+          </p>
+        </div>
+
+        <select
+          className={styles.rangeSelect}
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+        >
+          <option value="7">7 ngày</option>
+          <option value="30">30 ngày</option>
+          <option value="90">3 tháng</option>
+        </select>
+      </div>
 
       <ErrorMessage message={error} />
 
@@ -60,23 +89,30 @@ function DashboardPage() {
             <DashboardCard title="Từ yêu thích" value={statistics.totalFavorites} />
             <DashboardCard title="Từ đã học" value={statistics.learnedWords} />
             <DashboardCard title="Cần ôn SRS" value={statistics.dueWords} />
+            <DashboardCard title="Chuỗi ngày học" value={`${statistics.studyStreak} ngày`} />
+            <DashboardCard title="Tổng thời gian" value={`${statistics.totalStudyMinutes} phút`} />
           </div>
 
           <div className={styles.dashboardGrid}>
             <div className={styles.chartCard}>
-              <h2>Độ chính xác Quiz</h2>
+              <h2>Tỷ lệ trả lời đúng</h2>
 
-              <div className={styles.progressBar}>
+              <div className={styles.donutWrap}>
                 <div
-                  className={styles.progressFill}
-                  style={{ width: `${statistics.accuracy}%` }}
-                />
-              </div>
+                  className={styles.donut}
+                  style={{
+                    background: `conic-gradient(#16a34a ${statistics.accuracy}%, #e5e7eb 0)`,
+                  }}
+                >
+                  <span>{statistics.accuracy}%</span>
+                </div>
 
-              <p className={styles.chartText}>
-                Bạn trả lời đúng {statistics.totalCorrect} /{" "}
-                {statistics.totalQuestions} câu, đạt {statistics.accuracy}%.
-              </p>
+                <div className={styles.legendList}>
+                  <p>Đúng: {statistics.totalCorrect}</p>
+                  <p>Sai: {statistics.totalWrong}</p>
+                  <p>Tổng: {statistics.totalQuestions}</p>
+                </div>
+              </div>
             </div>
 
             <div className={styles.chartCard}>
@@ -111,9 +147,7 @@ function DashboardPage() {
                 </>
               ) : (
                 <>
-                  <p className={styles.chartText}>
-                    Bạn chưa có mục tiêu học tập.
-                  </p>
+                  <p className={styles.chartText}>Bạn chưa có mục tiêu học tập.</p>
 
                   <button
                     className={styles.actionButton}
@@ -126,18 +160,69 @@ function DashboardPage() {
             </div>
           </div>
 
+          <div className={styles.chartCard}>
+            <h2>Số câu luyện tập theo ngày</h2>
+
+            <div className={styles.barChart}>
+              {statistics.dailyStats.map((item) => (
+                <div key={item.date} className={styles.barItem}>
+                  <div className={styles.barColumn}>
+                    <div
+                      className={styles.correctBar}
+                      style={{
+                        height: `${(item.correct / maxQuestions) * 140}px`,
+                      }}
+                      title={`${item.date}: ${item.correct} câu đúng`}
+                    />
+                    <div
+                      className={styles.wrongBar}
+                      style={{
+                        height: `${(item.wrong / maxQuestions) * 140}px`,
+                      }}
+                      title={`${item.date}: ${item.wrong} câu sai`}
+                    />
+                  </div>
+                  <span>{item.date.slice(5)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.chartCard}>
+            <h2>Số câu đã luyện theo cấp độ JLPT</h2>
+
+            <div className={styles.levelBars}>
+              {statistics.levelStats.map((item) => (
+                <div key={item.level} className={styles.levelRow}>
+                  <span>{item.level}</span>
+
+                  <div className={styles.levelBarTrack}>
+                    <div
+                      className={styles.levelBarFill}
+                      style={{
+                        width: `${(item.count / maxLevelCount) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  <strong>{item.count}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.heatmapCard}>
             <div className={styles.heatmapHeader}>
-              <h2>Hoạt động học tập 90 ngày gần đây</h2>
-              <p>{statistics.totalSessions} phiên học</p>
+              <h2>Hoạt động học tập</h2>
+              <p>{statistics.range} ngày gần đây</p>
             </div>
 
             <div className={styles.heatmap}>
-              {statistics.activityHeatmap.map((item) => (
+              {statistics.heatmap.map((item) => (
                 <div
                   key={item.date}
                   className={`${styles.heatCell} ${getHeatLevel(item.count)}`}
-                  title={`${item.date}: ${item.count} phiên học`}
+                  title={`${item.date}: ${item.count} hoạt động`}
                 />
               ))}
             </div>

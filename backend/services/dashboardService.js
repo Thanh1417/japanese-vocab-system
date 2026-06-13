@@ -1,11 +1,66 @@
 const prisma = require("../config/prisma");
 
-const getDashboardStatistics = async (account_id) => {
-  const accountId = Number(account_id);
+const formatDateKey = (date) => {
+  return new Date(date).toISOString().slice(0, 10);
+};
 
-  const totalSessions = await prisma.study_sessions.count({
-    where: { account_id: accountId },
-  });
+const getDateRange = (range) => {
+  const days = Number(range) || 30;
+
+  const endDate = new Date();
+  const startDate = new Date();
+
+  startDate.setDate(endDate.getDate() - days + 1);
+  startDate.setHours(0, 0, 0, 0);
+
+  endDate.setHours(23, 59, 59, 999);
+
+  return { startDate, endDate, days };
+};
+
+const calculateStudyMinutes = (sessions) => {
+  return sessions.reduce((total, session) => {
+    if (!session.start_time || !session.end_time) {
+      return total;
+    }
+
+    const start = new Date(session.start_time);
+    const end = new Date(session.end_time);
+
+    const minutes = Math.max(
+      0,
+      Math.round((end.getTime() - start.getTime()) / 60000)
+    );
+
+    return total + minutes;
+  }, 0);
+};
+
+const calculateStreak = (sessions) => {
+  const studiedDates = new Set(
+    sessions.map((session) => formatDateKey(session.start_time))
+  );
+
+  let streak = 0;
+  const currentDate = new Date();
+
+  while (true) {
+    const dateKey = formatDateKey(currentDate);
+
+    if (!studiedDates.has(dateKey)) {
+      break;
+    }
+
+    streak += 1;
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  return streak;
+};
+
+const getDashboardStatistics = async (account_id, range) => {
+  const accountId = Number(account_id);
+  const { startDate, endDate, days } = getDateRange(range);
 
   const totalFavorites = await prisma.favorite_vocabularies.count({
     where: { account_id: accountId },
@@ -34,6 +89,61 @@ const getDashboardStatistics = async (account_id) => {
     },
   });
 
+  const sessions = await prisma.study_sessions.findMany({
+    where: {
+      account_id: accountId,
+      start_time: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    orderBy: {
+      start_time: "asc",
+    },
+  });
+
+  const questionResults = await prisma.question_results.findMany({
+    where: {
+      session: {
+        account_id: accountId,
+      },
+      answered_at: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    include: {
+      question: {
+        include: {
+          vocabulary: true,
+        },
+      },
+    },
+    orderBy: {
+      answered_at: "asc",
+    },
+  });
+
+  const allSessions = await prisma.study_sessions.findMany({
+    where: {
+      account_id: accountId,
+    },
+    orderBy: {
+      start_time: "asc",
+    },
+  });
+
+  const totalSessions = sessions.length;
+  const totalQuestions = questionResults.length;
+  const totalCorrect = questionResults.filter((item) => item.is_correct).length;
+  const totalWrong = totalQuestions - totalCorrect;
+
+  const accuracy =
+    totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+  const totalStudyMinutes = calculateStudyMinutes(sessions);
+  const studyStreak = calculateStreak(allSessions);
+
   let goalLearnedWords = 0;
   let goalProgress = 0;
 
@@ -53,67 +163,94 @@ const getDashboardStatistics = async (account_id) => {
         : 0;
   }
 
-  const sessions = await prisma.study_sessions.findMany({
-    where: {
-      account_id: accountId,
-    },
-    orderBy: {
-      start_time: "asc",
-    },
-  });
+  const dailyMap = {};
 
-  let totalQuestions = 0;
-  let totalCorrect = 0;
-
-  sessions.forEach((session) => {
-    totalQuestions += session.total_questions || 0;
-    totalCorrect += session.correct_answers || 0;
-  });
-
-  const accuracy =
-    totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-
-  const activityMap = {};
-
-  sessions.forEach((session) => {
-    const dateKey = session.start_time.toISOString().slice(0, 10);
-
-    if (!activityMap[dateKey]) {
-      activityMap[dateKey] = 0;
-    }
-
-    activityMap[dateKey] += 1;
-  });
-
-  const activityHeatmap = [];
-
-  for (let i = 89; i >= 0; i--) {
+  for (let i = days - 1; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
 
-    const dateKey = date.toISOString().slice(0, 10);
+    const dateKey = formatDateKey(date);
 
-    activityHeatmap.push({
+    dailyMap[dateKey] = {
       date: dateKey,
-      count: activityMap[dateKey] || 0,
-    });
+      sessions: 0,
+      questions: 0,
+      correct: 0,
+      wrong: 0,
+    };
   }
+
+  sessions.forEach((session) => {
+    const dateKey = formatDateKey(session.start_time);
+
+    if (dailyMap[dateKey]) {
+      dailyMap[dateKey].sessions += 1;
+    }
+  });
+
+  questionResults.forEach((result) => {
+    const dateKey = formatDateKey(result.answered_at);
+
+    if (dailyMap[dateKey]) {
+      dailyMap[dateKey].questions += 1;
+
+      if (result.is_correct) {
+        dailyMap[dateKey].correct += 1;
+      } else {
+        dailyMap[dateKey].wrong += 1;
+      }
+    }
+  });
+
+  const dailyStats = Object.values(dailyMap);
+
+  const levelMap = {
+    N5: 0,
+    N4: 0,
+    N3: 0,
+    N2: 0,
+    N1: 0,
+  };
+
+  questionResults.forEach((result) => {
+    const level = result.question?.vocabulary?.jlpt_level;
+
+    if (level && levelMap[level] !== undefined) {
+      levelMap[level] += 1;
+    }
+  });
+
+  const levelStats = Object.keys(levelMap).map((level) => ({
+    level,
+    count: levelMap[level],
+  }));
+
+  const heatmap = dailyStats.map((item) => ({
+    date: item.date,
+    count: item.sessions + item.questions,
+  }));
 
   return {
     success: true,
     statusCode: 200,
     data: {
+      range: days,
       totalSessions,
       totalFavorites,
       totalQuestions,
       totalCorrect,
+      totalWrong,
       accuracy,
       learnedWords,
       dueWords,
+      totalStudyMinutes,
+      studyStreak,
       activeGoal,
       goalLearnedWords,
       goalProgress,
-      activityHeatmap,
+      dailyStats,
+      levelStats,
+      heatmap,
     },
   };
 };
