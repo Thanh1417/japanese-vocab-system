@@ -1,10 +1,17 @@
 .title {
-  margin: 0 0 20px;
+  margin: 0 0 8px;
   font-size: 32px;
 }
 
-.message {
+.description {
   color: var(--color-muted);
+  margin-bottom: 20px;
+}
+
+.message,
+.resultText {
+  color: var(--color-muted);
+  margin-bottom: 12px;
 }
 
 .tableWrapper {
@@ -30,24 +37,63 @@
 .table td {
   padding: 14px;
   border-top: 1px solid var(--color-border);
+  vertical-align: middle;
 }
 
-.deleteButton {
+.wordCell {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.levelBadge,
+.lessonBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.levelBadge {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.lessonBadge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailButton {
   padding: 8px 12px;
   border: none;
   border-radius: var(--radius-md);
-  background: #ef4444;
+  background: var(--color-primary);
   color: white;
   cursor: pointer;
 }
 
-.deleteButton:hover {
-  opacity: 0.9;
+.heartButton {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
 }
 
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
+.detailButton:hover,
+.heartButton:hover {
+  opacity: 0.9;
 }
 
 .pagination {
@@ -69,4 +115,139 @@
 .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.modal {
+  width: min(720px, 100%);
+  background: white;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.modalWord {
+  margin: 0;
+  font-size: 44px;
+}
+
+.modalReading {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: 20px;
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+  flex-wrap: wrap;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.detailItem {
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: var(--radius-md);
+}
+
+.detailItem span,
+.exampleBox span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.detailItem strong {
+  line-height: 1.5;
+}
+
+.exampleBox {
+  margin-top: 16px;
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: var(--radius-md);
+}
+
+.exampleBox p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.audioButton,
+.removeButton {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.audioButton {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.removeButton {
+  background: #ef4444;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: auto;
+  }
+
+  .modal {
+    padding: 20px;
+  }
+
+  .modalWord {
+    font-size: 34px;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
 }
