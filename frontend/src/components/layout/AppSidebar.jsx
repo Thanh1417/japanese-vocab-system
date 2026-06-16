@@ -69,9 +69,9 @@ function AppSidebar() {
               Yêu thích
             </NavLink>
 
-            <NavLink to="/srs-review" className={getLinkClass}>
+            {/* <NavLink to="/srs-review" className={getLinkClass}>
               Ôn tập SRS
-            </NavLink>
+            </NavLink> */}
 
             <NavLink to="/recommendations" className={getLinkClass}>
               Gợi ý học tập

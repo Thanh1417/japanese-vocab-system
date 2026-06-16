@@ -1,5 +1,6 @@
 const vocabularyProgressRepository = require("../repositories/vocabularyProgressRepository");
 
+//Tính lịch ôn tiếp theo
 const calculateNextReview = (progress, isCorrect) => {
   let repetition_count = progress?.repetition_count || 0;
   let ease_factor = progress?.ease_factor || 2.5;
