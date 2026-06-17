@@ -6,6 +6,7 @@ import {
   deleteVocabularyApi,
   getAllVocabulariesApi,
   updateVocabularyApi,
+  searchVocabularyApi,
 } from "../../../api/vocabularyApi";
 
 import { getAllLessonsApi } from "../../../api/lessonApi";
@@ -20,6 +21,9 @@ function VocabularyManagementPage() {
   const [vocabularies, setVocabularies] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -136,6 +140,38 @@ function VocabularyManagementPage() {
     });
   };
 
+  const handleWordChange = async (e) => {
+    const value = e.target.value;
+    setFormData({ ...formData, word: value });
+
+    if (value.trim().length > 0) {
+      try {
+        const res = await searchVocabularyApi(value);
+        setSuggestions(res.data.data || res.data);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (vocab) => {
+    setFormData({
+      ...formData,
+      word: vocab.word,
+      reading: vocab.reading || "",
+      kanji_meaning: vocab.kanji_meaning || "",
+      vietnamese_meaning: vocab.vietnamese_meaning || "",
+      example_sentence: vocab.example_sentence || "",
+      audio_url: vocab.audio_url || "",
+      jlpt_level: vocab.jlpt_level || "N5",
+    });
+    setShowSuggestions(false);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -143,6 +179,45 @@ function VocabularyManagementPage() {
       ...formData,
       [name]: value,
     });
+  };
+
+  const handleVocabularySearch = async (value) => {
+    setFormData({
+      ...formData,
+      word: value,
+    });
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await searchVocabularyApi(value);
+
+      setSuggestions(response.data.data || []);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSelectVocabulary = (vocab) => {
+    setFormData({
+      ...formData,
+
+      word: vocab.word || "",
+      reading: vocab.reading || "",
+      kanji_meaning: vocab.kanji_meaning || "",
+      vietnamese_meaning: vocab.vietnamese_meaning || "",
+      example_sentence: vocab.example_sentence || "",
+      audio_url: vocab.audio_url || "",
+      jlpt_level: vocab.jlpt_level || "N5",
+    });
+
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   const handleChangeKeyword = (e) => {
@@ -272,14 +347,33 @@ function VocabularyManagementPage() {
 
           <div className={styles.formGroup}>
             <label>Từ vựng</label>
-
-            <input
-              name="word"
-              value={formData.word}
-              onChange={handleChange}
-              placeholder="Ví dụ: 日本"
-              required
-            />
+            <div className={styles.autocompleteWrapper}>
+              <input
+                name="word"
+                value={formData.word}
+                onChange={handleWordChange} // Gọi hàm mới thay vì handleChange
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay để kịp bắt sự kiện onClick
+                placeholder="Ví dụ: 日本"
+                required
+                autoComplete="off"
+              />
+              
+              {/* Dropdown hiển thị kết quả */}
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className={styles.suggestionsList}>
+                  {suggestions.map((item) => (
+                    <li 
+                      key={item.vocabulary_id} 
+                      className={styles.suggestionItem}
+                      onClick={() => handleSelectSuggestion(item)}
+                    >
+                      <span className={styles.suggWord}>{item.word}</span>
+                      <span className={styles.suggMeaning}>{item.vietnamese_meaning}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className={styles.formGroup}>

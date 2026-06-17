@@ -95,6 +95,22 @@ const deleteVocabulary = async (req, res) => {
   }
 };
 
+const searchVocabulary = async (req, res) => {
+  try {
+    const keyword = req.query.keyword;
+    const result = await vocabularyService.searchVocabulary(keyword);
+
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Loi server!",
+    });
+  }
+};
+
 module.exports = {
   getVocabularies,
   getVocabularyDetail,
@@ -102,4 +118,5 @@ module.exports = {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
+  searchVocabulary,
 };

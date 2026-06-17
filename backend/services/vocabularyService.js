@@ -101,6 +101,25 @@ const deleteVocabulary = async (vocabulary_id) => {
   };
 };
 
+const searchVocabulary = async (keyword) => {
+  if (!keyword || keyword.trim() === "") {
+    return {
+      success: true,
+      statusCode: 200,
+      data: [],
+    };
+  }
+
+  const vocabularies = await vocabularyRepository.searchVocabulary(keyword.trim());
+
+  return {
+    success: true,
+    statusCode: 200,
+    message: "Tìm kiếm từ vựng thành công!",
+    data: vocabularies,
+  };
+};
+
 module.exports = {
   getAllVocabularies,
   getVocabularyById,
@@ -108,4 +127,5 @@ module.exports = {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
+  searchVocabulary,
 };

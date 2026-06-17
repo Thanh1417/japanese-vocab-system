@@ -19,3 +19,7 @@ export const deleteVocabularyApi = (vocabularyId) => {
 export const getFlashcardVocabulariesApi = () => {
   return axiosClient.get("/vocabularies");
 };
+
+export const searchVocabularyApi = (keyword) => {
+  return axiosClient.get(`/vocabularies/search?keyword=${keyword}`);
+};

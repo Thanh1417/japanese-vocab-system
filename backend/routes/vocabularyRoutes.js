@@ -15,6 +15,12 @@ router.get(
     vocabularyController.getVocabulariesByLesson
 );
 
+router.get(
+  "/search",
+  verifyToken,
+  vocabularyController.searchVocabulary
+);
+
 router.get("/:id", verifyToken, vocabularyController.getVocabularyDetail);
 
 // Chỉ admin được thêm/sửa/xóa từ vựng

@@ -74,6 +74,50 @@ const deleteVocabulary = async (vocabulary_id) => {
   });
 };
 
+// const searchVocabulary = async (keyword) => {
+//   const vocabularies = await prisma.vocabularies.findMany({
+//     where: {
+//       OR: [
+//         {
+//           word: {
+//             contains: keyword,
+//           },
+//         },
+//         {
+//           reading: {
+//             contains: keyword,
+//           },
+//         },
+//       ],
+//     },
+//     orderBy: {
+//       vocabulary_id: "desc",
+//     },
+//   });
+
+//   const uniqueWords = new Map();
+
+//   vocabularies.forEach((item) => {
+//     if (!uniqueWords.has(item.word)) {
+//       uniqueWords.set(item.word, item);
+//     }
+//   });
+
+//   return Array.from(uniqueWords.values()).slice(0, 10);
+// };
+
+const searchVocabulary = async (keyword) => {
+  return await prisma.vocabularies.findMany({
+    where: {
+      word: {
+        contains: keyword,
+      },
+    },
+    distinct: ['word'], // Tránh trả về 1 từ nhiều lần nếu nó thuộc nhiều bài
+    take: 10, // Giới hạn tối đa 10 kết quả
+  });
+};
+
 module.exports = {
   findAllVocabularies,
   findVocabularyById,
@@ -81,4 +125,5 @@ module.exports = {
   createVocabulary,
   updateVocabulary,
   deleteVocabulary,
+  searchVocabulary,
 };
