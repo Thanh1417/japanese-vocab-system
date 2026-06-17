@@ -9,10 +9,79 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
 }
 
-.summaryCard h2 {
+.completedCard {
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+}
+
+.summaryContent {
+  flex: 1;
+}
+
+.summaryContent h2 {
   margin-top: 0;
+  display: flex;
+  align-items: center;
+  color: #1e293b;
+}
+
+.summaryContent p {
+  margin: 8px 0;
+  color: #334155;
+}
+
+.checkIcon {
+  margin-left: 8px;
+  font-size: 18px;
+}
+
+.statusActive {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+
+.statusCompleted {
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* CIRCULAR PROGRESS STYLES */
+.progressCircleWrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 24px;
+  min-width: 84px;
+}
+
+.circularSvg {
+  transform: rotate(-90deg);
+}
+
+.bgCircle {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 8;
+}
+
+.progressCircle {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
+
+.progressText {
+  position: absolute;
+  font-weight: 700;
+  font-size: 18px;
 }
 
 .studyActions {
@@ -29,6 +98,11 @@
   padding: 10px 14px;
   cursor: pointer;
   font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.studyActions button:hover {
+  opacity: 0.9;
 }
 
 .sectionTitle {
@@ -60,7 +134,20 @@
 }
 
 @media (max-width: 640px) {
+  .summaryCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .progressCircleWrapper {
+    margin-left: 0;
+    align-self: center;
+  }
   .studyActions {
     flex-direction: column;
+    width: 100%;
+  }
+  .studyActions button {
+    width: 100%;
   }
 }

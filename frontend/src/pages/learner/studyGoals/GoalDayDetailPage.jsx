@@ -43,7 +43,7 @@ function GoalDayDetailPage() {
 
   const formatDate = (date) => {
     if (!date) return "";
-    return new Date(date).toLocaleDateString();
+    return new Date(date).toLocaleDateString("vi-VN");
   };
 
   const goToFlashcard = () => {
@@ -58,6 +58,14 @@ function GoalDayDetailPage() {
     navigate(`/quiz?goalId=${goalId}&day=${dayNumber}&mode=typing`);
   };
 
+  // Tính toán các thông số cho vòng tròn tiến độ
+  const progress = dayDetail?.progress || 0;
+  const isCompleted = progress === 100;
+  const strokeColor = isCompleted ? "#10b981" : "#0ea5e9";
+  const radius = 34;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress / 100) * circumference;
+
   return (
     <MainLayout>
       <h1 className={styles.title}>Kế hoạch học ngày {dayNumber}</h1>
@@ -68,25 +76,47 @@ function GoalDayDetailPage() {
 
       {!loading && dayDetail && (
         <>
-          <div className={styles.summaryCard}>
-            <h2>{goal?.goal_name}</h2>
+          <div className={`${styles.summaryCard} ${isCompleted ? styles.completedCard : ""}`}>
+            <div className={styles.summaryContent}>
+              <h2>
+                {goal?.goal_name}
+                {isCompleted && <span className={styles.checkIcon}>✅</span>}
+              </h2>
 
-            <p>
-              <strong>Cấp độ:</strong> {goal?.jlpt_level}
-            </p>
+              <p><strong>Cấp độ:</strong> {goal?.jlpt_level}</p>
+              <p><strong>Ngày học:</strong> {formatDate(dayDetail.date)}</p>
+              <p><strong>Tiến độ:</strong> {dayDetail.learned_words || 0} / {dayDetail.total_words} từ</p>
+              <p>
+                <strong>Trạng thái: </strong>
+                <span className={isCompleted ? styles.statusCompleted : styles.statusActive}>
+                  {isCompleted ? "Đã hoàn thành" : "Đang học"}
+                </span>
+              </p>
 
-            <p>
-              <strong>Ngày học:</strong> {formatDate(dayDetail.date)}
-            </p>
+              <div className={styles.studyActions}>
+                <button onClick={goToFlashcard}>Học Flashcard</button>
+                <button onClick={goToMultipleChoice}>Trắc nghiệm</button>
+                <button onClick={goToTypingQuiz}>Tự luận</button>
+              </div>
+            </div>
 
-            <p>
-              <strong>Số từ cần học:</strong> {dayDetail.total_words}
-            </p>
-
-            <div className={styles.studyActions}>
-              <button onClick={goToFlashcard}>Học Flashcard</button>
-              <button onClick={goToMultipleChoice}>Trắc nghiệm</button>
-              <button onClick={goToTypingQuiz}>Tự luận</button>
+            {/* VÒNG TRÒN TIẾN ĐỘ */}
+            <div className={styles.progressCircleWrapper}>
+              <svg width="84" height="84" className={styles.circularSvg}>
+                <circle cx="42" cy="42" r={radius} className={styles.bgCircle} />
+                <circle
+                  cx="42" cy="42" r={radius}
+                  className={styles.progressCircle}
+                  style={{
+                    strokeDasharray: circumference,
+                    strokeDashoffset: offset,
+                    stroke: strokeColor,
+                  }}
+                />
+              </svg>
+              <div className={styles.progressText} style={{ color: strokeColor }}>
+                {progress}%
+              </div>
             </div>
           </div>
 

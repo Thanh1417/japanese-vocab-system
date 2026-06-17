@@ -39,6 +39,17 @@ const countWordsByLevel = async (jlpt_level) => {
   });
 };
 
+const countLearnedWordsByLevel = async (account_id, jlpt_level) => {
+  return await prisma.vocabulary_progress.count({
+    where: {
+      account_id: Number(account_id),
+      vocabulary: {
+        jlpt_level: jlpt_level,
+      },
+    },
+  });
+};
+
 const findVocabulariesByLevel = async (jlpt_level) => {
   return await prisma.vocabularies.findMany({
     where: {
@@ -98,11 +109,23 @@ const deleteGoal = async (goal_id) => {
   });
 };
 
+const countLearnedWordsByArray = async (account_id, wordIds) => {
+  if (!wordIds || wordIds.length === 0) return 0;
+  return await prisma.vocabulary_progress.count({
+    where: {
+      account_id: Number(account_id),
+      vocabulary_id: { in: wordIds },
+    },
+  });
+};
+
 module.exports = {
   findGoalsByAccountId,
   findGoalById,
   findActiveGoalByAccountId,
   countWordsByLevel,
+  countLearnedWordsByLevel,
+  countLearnedWordsByArray,
   findVocabulariesByLevel,
   createGoal,
   updateGoal,
