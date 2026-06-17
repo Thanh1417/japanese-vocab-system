@@ -86,6 +86,8 @@
   background: #f8fafc;
   padding: 14px;
   text-align: left;
+  font-size: 14px;
+  color: var(--color-muted);
 }
 
 .table td {

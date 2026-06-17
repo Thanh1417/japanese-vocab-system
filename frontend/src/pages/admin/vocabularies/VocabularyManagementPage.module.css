@@ -1,83 +1,65 @@
+/* HEADER & BUTTON THÊM */
+.headerArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .title {
-  margin: 0 0 20px;
+  margin: 0;
   font-size: 32px;
 }
 
-.form {
+.addButton {
+  background: var(--color-primary);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.addButton:hover {
+  opacity: 0.9;
+}
+
+/* BỘ LỌC (FILTER) */
+
+.filterBox {
   background: var(--color-white);
-  padding: 20px;
+  padding: 16px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  margin-bottom: 24px;
-}
-
-.formTitle {
-  margin: 0 0 16px;
-  font-size: 22px;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.formGroup,
-.formGroupFull {
+  margin-bottom: 20px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
-.formGroupFull {
-  grid-column: span 2;
-}
-
-.formGroup label,
-.formGroupFull label {
-  font-weight: 600;
-  color: var(--color-muted);
-}
-
-.formGroup input,
-.formGroup select,
-.formGroupFull textarea {
+.filterInput {
+  flex: 1;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
 }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.submitButton,
-.cancelButton,
-.editButton,
-.deleteButton {
-  border: none;
+.filterSelect {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  cursor: pointer;
+  outline: none;
 }
 
-.submitButton {
-  padding: 10px 16px;
-  background: var(--color-primary);
-  color: white;
-}
-
-.cancelButton {
-  padding: 10px 16px;
-  background: #e5e7eb;
-}
-
-.message {
+.resultText {
   color: var(--color-muted);
+  margin-bottom: 12px;
 }
 
+/* BẢNG DỮ LIỆU (TABLE) */
 .tableWrapper {
   background: var(--color-white);
   border-radius: var(--radius-lg);
@@ -103,53 +85,32 @@
   border-top: 1px solid var(--color-border);
 }
 
-.editButton {
-  padding: 7px 10px;
-  background: #f59e0b;
-  color: white;
-  margin-right: 8px;
-}
-
-.deleteButton {
-  padding: 7px 10px;
-  background: #ef4444;
-  color: white;
-}
-
 .actionButtons {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.filterBox {
-  background: var(--color-white);
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  margin-bottom: 20px;
-  display: flex;
-  gap: 12px;
+.editButton {
+  padding: 7px 10px;
+  background: #f59e0b;
+  color: white;
+  margin-right: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.filterInput {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.deleteButton {
+  padding: 7px 10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.filterSelect {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
-}
-
+/* PHÂN TRANG (PAGINATION) */
 .pagination {
   margin-top: 16px;
   display: flex;
@@ -170,39 +131,134 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
-/* 
-.autocompleteWrapper {
-  position: relative;
-}
 
-.suggestionBox {
-  position: absolute;
-  top: calc(100% + 4px);
+/* 
+   5. POPUP MODAL & FORM
+ */
+.modalOverlay {
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-
-  background: white;
-  border: 1px solid #ddd;
-
-  border-radius: 8px;
-
-  max-height: 250px;
-  overflow-y: auto;
-
-  z-index: 999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.suggestionItem {
+.modalContent {
+  background: white;
+  width: 100%;
+  max-width: 650px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 10px;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.closeModalBtn {
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.closeModalBtn:hover {
+  color: #ef4444;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.formGroup,
+.formGroupFull {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formGroup label,
+.formGroupFull label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.modalInput,
+.modalTextarea {
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.modalActions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.submitButton {
+  padding: 10px 16px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
-.suggestionItem:hover {
-  background: #f3f4f6;
-} */
+.cancelButton {
+  padding: 10px 16px;
+  background: #e5e7eb;
+  color: #374151;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
 
-/* ---- AUTOCOMPLETE STYLES ---- */
+/* 
+   6. AUTOCOMPLETE
+ */
 .autocompleteWrapper {
   position: relative;
   width: 100%;
