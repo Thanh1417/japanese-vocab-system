@@ -559,7 +559,7 @@ function QuizPage() {
           )}
 
           {answerResult === true && (
-            <p className={styles.correct}>✅ Chính xác</p>
+            <p className={styles.correct}>Chính xác</p>
           )}
 
           {answerResult === false && quizMode === "typing" && (

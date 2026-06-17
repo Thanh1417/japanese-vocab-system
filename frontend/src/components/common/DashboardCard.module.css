@@ -1,18 +1,82 @@
 .card {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-card);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* Hiệu ứng pattern chìm trang trí cho thẻ */
+.card::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.iconWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 54px;
+  height: 54px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.iconWrapper svg {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.content {
+  flex: 1;
 }
 
 .title {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 14px;
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.9;
 }
 
 .value {
-  margin: 10px 0 0;
-  font-size: 28px;
-  color: var(--color-text);
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
 }
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+.purple { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); }
+.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.teal { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+.pink { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); }
+.indigo { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
+.orange { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+.red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.cyan { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+.default { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
