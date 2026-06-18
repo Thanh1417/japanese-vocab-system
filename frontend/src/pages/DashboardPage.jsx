@@ -120,7 +120,7 @@ function DashboardPage() {
 
           {/* HÀNG 1 & 2: GOM VÀO LƯỚI 2 CỘT (XẾP THEO HÀNG NGANG) */}
           <div className={styles.dashboardGrid}>
-            
+
             {/* 1. TỶ LỆ TRẢ LỜI ĐÚNG */}
             <div className={styles.chartCard}>
               <h2>Tỷ lệ trả lời đúng</h2>
@@ -165,7 +165,7 @@ function DashboardPage() {
                         <div className={styles.goalFill} style={{ width: `${goal.goalProgress}%` }} />
                       </div>
                       <p className={styles.chartText}>
-                        Đã học <strong>{goal.goalLearnedWords}</strong> / {goal.total_words} từ 
+                        Đã học <strong>{goal.goalLearnedWords}</strong> / {goal.total_words} từ
                         <span className={styles.highlightText}> ({goal.goalProgress}%)</span>
                       </p>
                     </div>
@@ -185,7 +185,7 @@ function DashboardPage() {
               )}
             </div>
 
-            {/* 3. BIỂU ĐỒ SỐ CÂU LUYỆN TẬP (Vào Lưới 2 cột) */}
+            {/* 3. BIỂU ĐỒ SỐ CÂU LUYỆN TẬP (Vào lưới 2 cột) */}
             <div className={styles.chartCard}>
               <div className={styles.chartHeader}>
                 <h2>Luyện tập ({statistics.range} ngày)</h2>
@@ -194,12 +194,12 @@ function DashboardPage() {
                   <span className={styles.legendDot} style={{ background: '#ef4444' }}>Sai</span>
                 </div>
               </div>
-              
+
               <div className={styles.barChartContainer} ref={practiceChartRef}>
                 <div className={styles.barChartInner}>
                   {statistics.dailyStats.map((item) => (
                     <div key={item.date} className={styles.barItem}>
-                      <div 
+                      <div
                         className={styles.barColumnTrack}
                         title={`Ngày: ${formatLabelDate(item.date)}\nĐúng: ${item.correct} câu\nSai: ${item.wrong} câu\nThời gian học: ${item.minutes} phút`}
                       >
@@ -240,7 +240,42 @@ function DashboardPage() {
               </div>
             </div>
 
-            {/* 5. TẦN SUẤT HOẠT ĐỘNG (HEATMAP) */}
+            
+
+          </div>
+
+          {/* DÒNG CUỐI CÙNG: THỜI GIAN HỌC CHI TIẾT (FULL WIDTH) */}
+          <div className={styles.fullWidthChartCard}>
+            <div className={styles.chartHeader}>
+              <h2>Thời gian học chi tiết ({statistics.range} ngày qua)</h2>
+              <div className={styles.legendInline}>
+                <span className={styles.legendDot} style={{ background: '#3b82f6' }}>Số phút</span>
+              </div>
+            </div>
+
+            <div className={styles.barChartContainer} ref={timeChartRef}>
+              <div className={styles.barChartInner}>
+                {statistics.dailyStats.map((item) => (
+                  <div key={`min-${item.date}`} className={styles.barItem}>
+                    <div
+                      className={styles.barColumnTrack}
+                      title={`Ngày: ${formatLabelDate(item.date)}\nThời gian học: ${item.minutes} phút\nĐúng: ${item.correct} câu\nSai: ${item.wrong} câu`}
+                    >
+                      <div className={styles.barColumnFill}>
+                        <div
+                          className={styles.minuteBar}
+                          style={{ height: `${(item.minutes / maxMinutes) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className={styles.dateLabel}>{formatLabelDate(item.date)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 5. TẦN SUẤT HOẠT ĐỘNG (HEATMAP) */}
             <div className={styles.heatmapCard}>
               <div className={styles.heatmapHeader}>
                 <h2>Tần suất tương tác</h2>
@@ -264,39 +299,6 @@ function DashboardPage() {
                 <span>Nhiều</span>
               </div>
             </div>
-
-          </div>
-
-          {/* DÒNG CUỐI CÙNG: THỜI GIAN HỌC CHI TIẾT (FULL WIDTH) */}
-          <div className={styles.fullWidthChartCard}>
-            <div className={styles.chartHeader}>
-              <h2>Thời gian học chi tiết ({statistics.range} ngày qua)</h2>
-              <div className={styles.legendInline}>
-                <span className={styles.legendDot} style={{ background: '#3b82f6' }}>Số phút</span>
-              </div>
-            </div>
-
-            <div className={styles.barChartContainer} ref={timeChartRef}>
-              <div className={styles.barChartInner}>
-                {statistics.dailyStats.map((item) => (
-                  <div key={`min-${item.date}`} className={styles.barItem}>
-                    <div 
-                      className={styles.barColumnTrack}
-                      title={`Ngày: ${formatLabelDate(item.date)}\nThời gian học: ${item.minutes} phút\nĐúng: ${item.correct} câu\nSai: ${item.wrong} câu`}
-                    >
-                      <div className={styles.barColumnFill}>
-                        <div
-                          className={styles.minuteBar}
-                          style={{ height: `${(item.minutes / maxMinutes) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className={styles.dateLabel}>{formatLabelDate(item.date)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
         </>
       )}
