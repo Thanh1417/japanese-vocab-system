@@ -139,7 +139,7 @@ function VocabularyManagementPage() {
         kanji_meaning: vocab.kanji_meaning || "",
         vietnamese_meaning: vocab.vietnamese_meaning || "",
         example_sentence: vocab.example_sentence || "",
-        audio_url: vocab.audio_url || "",
+        audio_url: vocab.audio_url || "", // Vẫn giữ liệu cũ nếu có
         jlpt_level: vocab.jlpt_level || "N5",
       });
     } else {
@@ -206,7 +206,6 @@ function VocabularyManagementPage() {
       vietnamese_meaning: vocab.vietnamese_meaning || "",
       example_sentence: vocab.example_sentence || "",
       audio_url: vocab.audio_url || "",
-      // Không ghi đè jlpt_level và lesson_id để lưu vào bài học hiện tại đang chọn
     });
     setShowSuggestions(false);
   };
@@ -247,6 +246,44 @@ function VocabularyManagementPage() {
       fetchData();
     } catch (error) {
       setError(error.response?.data?.message || "Xoá từ vựng thất bại");
+    }
+  };
+
+  // Hàm phát âm Text-to-Speech
+  const playAudio = (text) => {
+    if (!text) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); 
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      utterance.lang = 'ja-JP';
+      
+      // 1. Chỉnh tốc độ (Rate): Mặc định là 1
+      utterance.rate = 1; 
+      
+      // 2. Chỉnh âm lượng (Volume): Mặc định là 1 (tối đa). Đảm bảo luôn phát ra tiếng to nhất.
+      utterance.volume = 1; 
+
+      // 3. Chỉnh giọng đọc (Voice): Tìm và ép chọn giọng nữ
+      const voices = window.speechSynthesis.getVoices();
+      const japaneseVoices = voices.filter(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
+
+      if (japaneseVoices.length > 0) {
+        // Ưu tiên các giọng nữ nổi tiếng: Google (Android/Chrome), Kyoko (Mac/iOS), Haruka/Nanami (Windows)
+        const femaleVoice = japaneseVoices.find(v => 
+          v.name.includes('Google') || 
+          v.name.includes('Kyoko') || 
+          v.name.includes('Haruka') ||
+          v.name.includes('Nanami')
+        );
+        
+        // Nếu tìm thấy giọng nữ ưu tiên thì dùng, không thì lấy giọng tiếng Nhật đầu tiên có sẵn
+        utterance.voice = femaleVoice || japaneseVoices[0];
+      }
+      
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Trình duyệt không hỗ trợ phát âm.");
     }
   };
 
@@ -310,6 +347,7 @@ function VocabularyManagementPage() {
                   <th>ID</th>
                   <th>Từ vựng</th>
                   <th>Cách đọc</th>
+                  <th style={{ textAlign: "center" }}>Phát âm</th>
                   <th>Âm Hán</th>
                   <th>Nghĩa</th>
                   <th>JLPT</th>
@@ -321,8 +359,21 @@ function VocabularyManagementPage() {
                 {paginatedVocabularies.map((vocab) => (
                   <tr key={vocab.vocabulary_id}>
                     <td>{vocab.vocabulary_id}</td>
-                    <td>{vocab.word}</td>
+                    <td className={styles.kanjiText}>{vocab.word}</td>
                     <td>{vocab.reading}</td>
+                    
+                    {/* NÚT PHÁT ÂM */}
+                    <td style={{ textAlign: "center" }}>
+                      <button 
+                        type="button"
+                        className={styles.playAudioBtn} 
+                        onClick={() => playAudio(vocab.reading || vocab.word)}
+                        title="Nghe phát âm"
+                      >
+                        ▶
+                      </button>
+                    </td>
+
                     <td>{vocab.kanji_meaning || "-"}</td>
                     <td>{vocab.vietnamese_meaning}</td>
                     <td>{vocab.jlpt_level}</td>
@@ -429,13 +480,9 @@ function VocabularyManagementPage() {
                   <input name="vietnamese_meaning" value={formData.vietnamese_meaning} onChange={handleChange} placeholder="Ví dụ: Nước Nhật Bản" required className={styles.modalInput} />
                 </div>
 
-                {/* 7. Audio URL */}
-                <div className={styles.formGroupFull}>
-                  <label>Audio URL</label>
-                  <input name="audio_url" value={formData.audio_url} onChange={handleChange} placeholder="Link audio nếu có..." className={styles.modalInput} />
-                </div>
+                {/* Đã xóa field nhập Audio URL ở đây */}
 
-                {/* 8. Ví dụ */}
+                {/* 7. Ví dụ */}
                 <div className={styles.formGroupFull}>
                   <label>Ví dụ</label>
                   <textarea name="example_sentence" value={formData.example_sentence} onChange={handleChange} placeholder="Ví dụ: 私は学生です。" rows="3" className={styles.modalTextarea} />
