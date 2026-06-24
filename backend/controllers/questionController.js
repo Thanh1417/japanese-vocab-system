@@ -95,6 +95,23 @@ const deleteQuestion = async (req, res) => {
   }
 };
 
+const autoGenerateQuestions = async (req, res) => {
+  try {
+    const lessonId = req.params.lessonId;
+    const generate_type = req.body.generate_type; // Nhận 'typing', 'multiple_choice' hoặc 'both'
+
+    const result = await questionService.autoGenerateQuestions(lessonId, generate_type);
+
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi server khi sinh câu hỏi tự động!",
+    });
+  }
+};
+
 module.exports = {
   getQuestions,
   getQuestionDetail,
@@ -102,4 +119,5 @@ module.exports = {
   createQuestion,
   updateQuestion,
   deleteQuestion,
+  autoGenerateQuestions,
 };

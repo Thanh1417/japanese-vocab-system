@@ -40,6 +40,7 @@ const createQuestion = async (data) => {
       content: data.content,
       question_type: data.question_type,
       correct_answer: data.correct_answer,
+      options: data.options ? data.options : null,
     },
   });
 };
@@ -54,6 +55,7 @@ const updateQuestion = async (question_id, data) => {
       content: data.content,
       question_type: data.question_type,
       correct_answer: data.correct_answer,
+      options: data.options ? data.options : null,
     },
   });
 };

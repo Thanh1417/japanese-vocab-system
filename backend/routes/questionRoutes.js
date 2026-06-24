@@ -26,6 +26,13 @@ router.post(
   questionController.createQuestion
 );
 
+router.post(
+  "/auto-generate/:lessonId",
+  verifyToken,
+  checkRole("admin"),
+  questionController.autoGenerateQuestions
+);
+
 router.put(
   "/:id",
   verifyToken,

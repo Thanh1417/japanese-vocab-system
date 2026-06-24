@@ -6,9 +6,10 @@ import {
   deleteQuestionApi,
   getAllQuestionsApi,
   updateQuestionApi,
+  autoGenerateQuestionsApi,
 } from "../../../api/questionApi";
-
 import { getAllVocabulariesApi } from "../../../api/vocabularyApi";
+import { getAllLessonsApi } from "../../../api/lessonApi"; 
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
@@ -19,43 +20,52 @@ import styles from "./QuestionManagementPage.module.css";
 function QuestionManagementPage() {
   const [questions, setQuestions] = useState([]);
   const [vocabularies, setVocabularies] = useState([]);
+  const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Phân trang & Lọc
   const [keyword, setKeyword] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterLevel, setFilterLevel] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 24;
+  const itemsPerPage = 20;
 
-  // Trạng thái cho Modal (Popup)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Trạng thái cho Autocomplete Tìm kiếm từ vựng
+  const [isAutoModalOpen, setIsAutoModalOpen] = useState(false);
+  const [selectedLessonForAuto, setSelectedLessonForAuto] = useState("");
+  const [autoGenerateType, setAutoGenerateType] = useState("both");
+
+  // State quản lý việc hiển thị dropdown nào đang mở ('vocab', 'w1', 'w2', 'w3')
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [vocabSearchTerm, setVocabSearchTerm] = useState("");
-  const [showVocabSuggestions, setShowVocabSuggestions] = useState(false);
-  const autocompleteRef = useRef(null);
+  
+  // Dùng 1 ref chung bao quanh toàn bộ form để phát hiện click ra ngoài
+  const formRef = useRef(null);
 
   const [formData, setFormData] = useState({
     vocabulary_id: "",
     content: "",
     question_type: "typing",
     correct_answer: "",
+    wrong_1: "",
+    wrong_2: "",
+    wrong_3: "",
   });
 
   const fetchData = async () => {
     try {
       setError("");
-      const [questionRes, vocabularyRes] = await Promise.all([
+      const [questionRes, vocabularyRes, lessonRes] = await Promise.all([
         getAllQuestionsApi(),
         getAllVocabulariesApi(),
+        getAllLessonsApi(),
       ]);
-
       setQuestions(questionRes.data.data || questionRes.data);
       setVocabularies(vocabularyRes.data.data || vocabularyRes.data);
+      setLessons(lessonRes.data.data || lessonRes.data);
     } catch (error) {
       setError(error.response?.data?.message || "Không thể tải dữ liệu");
     } finally {
@@ -65,18 +75,15 @@ function QuestionManagementPage() {
 
   useEffect(() => {
     fetchData();
-    
-    // Tắt dropdown từ vựng khi click ra ngoài
     const handleClickOutside = (event) => {
-      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
-        setShowVocabSuggestions(false);
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        setActiveDropdown(null); // Đóng tất cả dropdown nếu click ra ngoài form
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logic lọc và sắp xếp danh sách câu hỏi
   const filteredQuestions = questions.filter((question) => {
     const searchText = keyword.toLowerCase();
     const matchKeyword =
@@ -91,11 +98,10 @@ function QuestionManagementPage() {
   });
 
   const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
-
   const sortedQuestions = [...filteredQuestions].sort((a, b) => {
     const levelCompare = jlptOrder[a.vocabulary?.jlpt_level] - jlptOrder[b.vocabulary?.jlpt_level];
     if (levelCompare !== 0) return levelCompare;
-    return a.question_id - b.question_id;
+    return b.question_id - a.question_id; 
   });
 
   const totalPages = Math.ceil(sortedQuestions.length / itemsPerPage);
@@ -104,15 +110,26 @@ function QuestionManagementPage() {
     currentPage * itemsPerPage
   );
 
-  // Mở & Đóng Modal
   const openModal = (question = null) => {
     if (question) {
       setEditingId(question.question_id);
+      
+      let w1 = "", w2 = "", w3 = "";
+      if (question.question_type === 'multiple_choice' && Array.isArray(question.options)) {
+        const wrongs = question.options.filter(opt => opt !== question.correct_answer);
+        w1 = wrongs[0] || "";
+        w2 = wrongs[1] || "";
+        w3 = wrongs[2] || "";
+      }
+
       setFormData({
         vocabulary_id: question.vocabulary_id,
         content: question.content,
         question_type: question.question_type,
         correct_answer: question.correct_answer,
+        wrong_1: w1,
+        wrong_2: w2,
+        wrong_3: w3,
       });
       setVocabSearchTerm(question.vocabulary?.word || "");
     } else {
@@ -122,69 +139,84 @@ function QuestionManagementPage() {
         content: "",
         question_type: "typing",
         correct_answer: "",
+        wrong_1: "",
+        wrong_2: "",
+        wrong_3: "",
       });
       setVocabSearchTerm("");
     }
+    setActiveDropdown(null);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsAutoModalOpen(false);
     setError("");
   };
 
-  // Logic Autocomplete tìm kiếm từ vựng local
-  const filteredVocabulariesForSearch = vocabularies.filter(v => 
+  // Hàm lọc gợi ý cho TỪ VỰNG CHÍNH
+  const filteredVocabulariesForSearch = vocabularies.filter(v =>
     v.word?.toLowerCase().includes(vocabSearchTerm.toLowerCase()) ||
     v.vietnamese_meaning?.toLowerCase().includes(vocabSearchTerm.toLowerCase())
-  ).slice(0, 15); // Lấy tối đa 15 kết quả để UI không bị lag
+  ).slice(0, 15);
 
   const handleSelectVocab = (vocab) => {
     setVocabSearchTerm(vocab.word);
-    setShowVocabSuggestions(false);
-    
-    // Tự động điền nội dung và đáp án luôn là Nghĩa Tiếng Việt
+    setActiveDropdown(null);
     setFormData({
       ...formData,
       vocabulary_id: vocab.vocabulary_id,
-      content: `${vocab.word} có nghĩa là gì?`,
+      content: formData.question_type === "typing" ? `${vocab.word} có nghĩa là gì?` : `Chọn nghĩa đúng của từ: ${vocab.word}`,
       correct_answer: vocab.vietnamese_meaning || "",
     });
   };
 
+  // Hàm lọc gợi ý cho ĐÁP ÁN NHIỄU (Chỉ tìm theo nghĩa tiếng Việt)
+  const getWrongAnswerSuggestions = (searchTerm) => {
+    if (!searchTerm) return [];
+    return vocabularies.filter(v =>
+      v.vietnamese_meaning?.toLowerCase().includes(searchTerm.toLowerCase())
+    ).slice(0, 10);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
     let newFormData = { ...formData, [name]: value };
-
-    // Nếu đổi loại câu hỏi mà đã có từ vựng rồi, vẫn set lại câu hỏi về Nghĩa Tiếng Việt
     if (name === "question_type" && newFormData.vocabulary_id) {
-       const selectedVocab = vocabularies.find(v => v.vocabulary_id === Number(newFormData.vocabulary_id));
-       if (selectedVocab) {
-         newFormData.content = `${selectedVocab.word} có nghĩa là gì?`;
-         newFormData.correct_answer = selectedVocab.vietnamese_meaning || "";
-       }
+      const selectedVocab = vocabularies.find(v => v.vocabulary_id === Number(newFormData.vocabulary_id));
+      if (selectedVocab) {
+        newFormData.content = newFormData.question_type === "typing" ? `${selectedVocab.word} có nghĩa là gì?` : `Chọn nghĩa đúng của từ: ${selectedVocab.word}`;
+      }
     }
-
     setFormData(newFormData);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.vocabulary_id) {
-        setError("Vui lòng tìm và chọn một từ vựng!");
-        return;
+      setError("Vui lòng tìm và chọn một từ vựng!"); return;
     }
 
-    const payload = {
-      ...formData,
+    let finalOptions = null;
+    if (formData.question_type === 'multiple_choice') {
+      if (!formData.wrong_1 || !formData.wrong_2 || !formData.wrong_3) {
+        setError("Vui lòng nhập đủ 3 đáp án nhiễu cho câu trắc nghiệm!"); return;
+      }
+      const rawOptions = [formData.correct_answer, formData.wrong_1, formData.wrong_2, formData.wrong_3];
+      finalOptions = rawOptions.sort(() => Math.random() - 0.5);
+    }
+
+    const payload = { 
       vocabulary_id: Number(formData.vocabulary_id),
+      content: formData.content,
+      question_type: formData.question_type,
+      correct_answer: formData.correct_answer,
+      options: finalOptions
     };
 
     try {
-      setError("");
-      setSuccess("");
-
+      setError(""); setSuccess("");
       if (editingId) {
         await updateQuestionApi(editingId, payload);
         setSuccess("Cập nhật câu hỏi thành công");
@@ -192,9 +224,7 @@ function QuestionManagementPage() {
         await createQuestionApi(payload);
         setSuccess("Thêm câu hỏi thành công");
       }
-
-      closeModal();
-      fetchData();
+      closeModal(); fetchData();
     } catch (error) {
       setError(error.response?.data?.message || "Lưu câu hỏi thất bại");
     }
@@ -203,8 +233,7 @@ function QuestionManagementPage() {
   const handleDelete = async (questionId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá?")) return;
     try {
-      setError("");
-      setSuccess("");
+      setError(""); setSuccess("");
       await deleteQuestionApi(questionId);
       setSuccess("Xoá câu hỏi thành công");
       fetchData();
@@ -213,13 +242,39 @@ function QuestionManagementPage() {
     }
   };
 
+  const handleAutoGenerate = async () => {
+    if (!selectedLessonForAuto) return;
+    try {
+      setLoading(true);
+      setError("");
+      await autoGenerateQuestionsApi(selectedLessonForAuto, { 
+        generate_type: autoGenerateType 
+      });
+      setSuccess("Đã tạo câu hỏi tự động thành công!");
+      closeModal();
+      fetchData();
+    } catch (error) {
+      setError(error.response?.data?.message || "Tạo câu hỏi thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className={styles.headerArea}>
-        <h1 className={styles.title}>Quản lý câu hỏi</h1>
-        <button className={styles.addButton} onClick={() => openModal()}>
-          Thêm câu hỏi
-        </button>
+        <div>
+          <h1 className={styles.title}>Quản lý câu hỏi</h1>
+          <p className={styles.subtitle}>Tạo câu hỏi trắc nghiệm, tự luận theo bài học</p>
+        </div>
+        <div className={styles.actionGroup}>
+          <button className={styles.autoButton} onClick={() => setIsAutoModalOpen(true)}>
+            Tạo câu hỏi tự động
+          </button>
+          <button className={styles.addButton} onClick={() => openModal()}>
+            Thêm câu hỏi
+          </button>
+        </div>
       </div>
 
       <ErrorMessage message={error} />
@@ -237,9 +292,9 @@ function QuestionManagementPage() {
           value={filterType}
           onChange={(e) => { setFilterType(e.target.value); setCurrentPage(1); }}
         >
-          <option value="">Tất cả loại câu hỏi</option>
-          <option value="typing">Typing</option>
-          <option value="multiple_choice">Multiple Choice</option>
+          <option value="">Tất cả loại hình</option>
+          <option value="typing">Tự luận (Typing)</option>
+          <option value="multiple_choice">Trắc nghiệm (Choice)</option>
         </select>
         <select
           className={styles.filterSelect}
@@ -255,10 +310,6 @@ function QuestionManagementPage() {
         </select>
       </div>
 
-      <p className={styles.resultText}>
-        Tìm thấy <strong>{sortedQuestions.length}</strong> câu hỏi
-      </p>
-
       {loading && <LoadingMessage />}
 
       {!loading && (
@@ -267,48 +318,108 @@ function QuestionManagementPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Từ vựng</th>
-                  <th>Nội dung</th>
-                  <th>Đáp án</th>
-                  <th>Loại</th>
-                  <th>JLPT</th>
-                  <th>Thao tác</th>
+                  <th width="60px" style={{ textAlign: "center" }}>STT</th>
+                  <th width="120px">Từ vựng</th>
+                  <th>Nội dung câu hỏi</th>
+                  <th>Đáp án đúng</th>
+                  <th width="120px" style={{ textAlign: "center" }}>Loại</th>
+                  <th width="100px" style={{ textAlign: "center" }}>JLPT</th>
+                  <th width="140px" style={{ textAlign: "center" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedQuestions.map((question) => (
-                  <tr key={question.question_id}>
-                    <td>{question.question_id}</td>
-                    <td>{question.vocabulary?.word}</td>
-                    <td>{question.content}</td>
-                    <td>{question.correct_answer}</td>
-                    <td>{question.question_type}</td>
-                    <td>{question.vocabulary?.jlpt_level}</td>
-                    <td>
-                      <div className={styles.actionButtons}>
-                        <button className={styles.editButton} onClick={() => openModal(question)}>Sửa</button>
-                        <button className={styles.deleteButton} onClick={() => handleDelete(question.question_id)}>Xoá</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {paginatedQuestions.map((question, index) => {
+                  const realIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                  return (
+                    <tr key={question.question_id}>
+                      <td className={styles.sttCol}>{realIndex}</td>
+                      <td className={styles.kanjiText}>{question.vocabulary?.word}</td>
+                      <td>
+                        <div className={styles.questionContent}>{question.content}</div>
+                        {question.question_type === 'multiple_choice' && question.options && (
+                          <div className={styles.optionsWrapper}>
+                            {Array.isArray(question.options) ? question.options.map((opt, i) => (
+                              <span
+                                key={i}
+                                className={`${styles.optionTag} ${opt === question.correct_answer ? styles.optionCorrect : styles.optionWrong}`}
+                              >
+                                {String.fromCharCode(65 + i)}. {opt}
+                              </span>
+                            )) : null}
+                          </div>
+                        )}
+                      </td>
+                      <td className={styles.correctText}>{question.correct_answer}</td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className={question.question_type === 'typing' ? styles.tagTyping : styles.tagChoice}>
+                          {question.question_type === 'typing' ? 'Tự luận' : 'Trắc nghiệm'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className={`${styles.badge} ${styles[question.vocabulary?.jlpt_level]}`}>
+                          {question.vocabulary?.jlpt_level}
+                        </span>
+                      </td>
+                      <td>
+                        <div className={styles.actionButtons}>
+                          <button className={styles.editButton} onClick={() => openModal(question)}>Sửa</button>
+                          <button className={styles.deleteButton} onClick={() => handleDelete(question.question_id)}>Xoá</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Trước</button>
-            <span>Trang {currentPage} / {totalPages || 1}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0}>Sau</button>
-          </div>
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Trước</button>
+              <span>Trang {currentPage} / {totalPages}</span>
+              <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>Sau</button>
+            </div>
+          )}
         </>
       )}
 
-      {/* POPUP MODAL THÊM/SỬA CÂU HỎI */}
-      {isModalOpen && (
+      {/* POPUP: TẠO CÂU HỎI TỰ ĐỘNG */}
+      {isAutoModalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Tạo câu hỏi tự động</h2>
+              <button className={styles.closeModalBtn} onClick={closeModal}>&times;</button>
+            </div>
+            <div className={styles.formGroup}>
+              <label>Chọn Bài học để tạo câu hỏi</label>
+              <select className={styles.modalInput} value={selectedLessonForAuto} onChange={e => setSelectedLessonForAuto(e.target.value)}>
+                <option value="">Lựa chọn bài học</option>
+                {lessons.map(ls => <option key={ls.lesson_id} value={ls.lesson_id}>{ls.lesson_name} ({ls.jlpt_level})</option>)}
+              </select>
+            </div>
+           <div className={styles.formGroup}>
+              <label>Loại câu hỏi muốn tạo</label>
+              <select className={styles.modalInput} value={autoGenerateType} onChange={e => setAutoGenerateType(e.target.value)}>
+                <option value="both">Cả hai (Tự luận & Trắc nghiệm)</option>
+                <option value="typing">Tự luận</option>
+                <option value="multiple_choice">Trắc nghiệm</option>
+              </select>
+           </div>
+            <div className={styles.modalActions}>
+              <button className={styles.autoGenerateBtn} onClick={handleAutoGenerate} disabled={!selectedLessonForAuto}>
+                Bắt đầu tạo
+              </button>
+              <button type="button" className={styles.cancelButton} onClick={closeModal}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP: THÊM/SỬA THỦ CÔNG */}
+      {isModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} ref={formRef}>
             <div className={styles.modalHeader}>
               <h2>{editingId ? "Cập nhật câu hỏi" : "Thêm câu hỏi mới"}</h2>
               <button className={styles.closeModalBtn} onClick={closeModal}>&times;</button>
@@ -317,9 +428,9 @@ function QuestionManagementPage() {
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.formGrid}>
                 
-                {/* Ô TÌM KIẾM TỪ VỰNG AUTOCOMPLETE */}
-                <div className={styles.formGroup} ref={autocompleteRef}>
-                  <label>Tìm chọn Từ vựng</label>
+                {/* AUTOCOMPLETE: TÌM TỪ VỰNG CHÍNH */}
+                <div className={styles.formGroup}>
+                  <label>Tìm chọn từ vựng</label>
                   <div className={styles.autocompleteWrapper}>
                     <input
                       type="text"
@@ -327,14 +438,15 @@ function QuestionManagementPage() {
                       value={vocabSearchTerm}
                       onChange={(e) => {
                         setVocabSearchTerm(e.target.value);
-                        setShowVocabSuggestions(true);
-                        setFormData({...formData, vocabulary_id: ""}); // Reset id nếu gõ từ mới
+                        setActiveDropdown('vocab');
+                        setFormData({ ...formData, vocabulary_id: "" });
                       }}
-                      onFocus={() => setShowVocabSuggestions(true)}
-                      placeholder="Gõ tiếng Nhật hoặc nghĩa..."
+                      onFocus={() => setActiveDropdown('vocab')}
+                      placeholder="Nhập tiếng Nhật hoặc nghĩa..."
                       required
+                      autoComplete="off"
                     />
-                    {showVocabSuggestions && vocabSearchTerm && (
+                    {activeDropdown === 'vocab' && vocabSearchTerm && (
                       <ul className={styles.suggestionsList}>
                         {filteredVocabulariesForSearch.map(v => (
                           <li key={v.vocabulary_id} className={styles.suggestionItem} onClick={() => handleSelectVocab(v)}>
@@ -342,9 +454,6 @@ function QuestionManagementPage() {
                             <span className={styles.suggMeaning}>{v.vietnamese_meaning}</span>
                           </li>
                         ))}
-                        {filteredVocabulariesForSearch.length === 0 && (
-                          <li className={styles.suggestionItem}>Không tìm thấy từ vựng</li>
-                        )}
                       </ul>
                     )}
                   </div>
@@ -358,25 +467,25 @@ function QuestionManagementPage() {
                     value={formData.question_type}
                     onChange={handleChange}
                   >
-                    <option value="typing">Typing</option>
-                    <option value="multiple_choice">Multiple Choice</option>
+                    <option value="typing">Tự luận</option>
+                    <option value="multiple_choice">Trắc nghiệm</option>
                   </select>
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <label>Nội dung câu hỏi (Tự động điền)</label>
+                  <label>Nội dung câu hỏi</label>
                   <textarea
-                    className={styles.modalTextarea}
+                    className={styles.modalInput}
                     name="content"
                     value={formData.content}
                     onChange={handleChange}
-                    rows="3"
+                    rows="2"
                     required
                   />
                 </div>
 
                 <div className={styles.formGroupFull}>
-                  <label>Đáp án đúng (Tự động điền)</label>
+                  <label>Đáp án đúng</label>
                   <input
                     className={styles.modalInput}
                     name="correct_answer"
@@ -385,21 +494,63 @@ function QuestionManagementPage() {
                     required
                   />
                 </div>
+
+                {/* CHỈ HIỂN THỊ 3 ĐÁP ÁN NHIỄU NẾU LÀ TRẮC NGHIỆM */}
+                {formData.question_type === 'multiple_choice' && (
+                  <>
+                    <div className={styles.formGroupFull} style={{marginTop: "8px"}}>
+                      <label style={{color: "#ef4444"}}>Các đáp án nhiễu (Nhập tay hoặc chọn từ gợi ý)</label>
+                    </div>
+                    
+                    {/* VÒNG LẶP RENDER 3 Ô NHẬP ĐÁP ÁN NHIỄU */}
+                    {[1, 2, 3].map((num) => (
+                      <div className={styles.formGroup} key={num}>
+                        <div className={styles.autocompleteWrapper}>
+                          <input
+                            className={styles.modalInput}
+                            name={`wrong_${num}`}
+                            value={formData[`wrong_${num}`]}
+                            onChange={handleChange}
+                            onFocus={() => setActiveDropdown(`w${num}`)}
+                            placeholder={`Đáp án nhiễu ${num}...`}
+                            required
+                            autoComplete="off"
+                          />
+                          {activeDropdown === `w${num}` && formData[`wrong_${num}`] && (
+                            <ul className={styles.suggestionsList}>
+                              {getWrongAnswerSuggestions(formData[`wrong_${num}`]).map((v, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className={styles.suggestionItem} 
+                                  onClick={() => {
+                                    setFormData({...formData, [`wrong_${num}`]: v.vietnamese_meaning});
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  <span className={styles.suggMeaning}>{v.vietnamese_meaning}</span>
+                                  <span className={styles.suggWord} style={{fontSize: "12px", marginLeft: "8px"}}>- {v.word}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
               </div>
 
               <div className={styles.modalActions}>
                 <button className={styles.submitButton} type="submit">
-                  {editingId ? "Cập nhật" : "Lưu câu hỏi"}
+                  {editingId ? "Lưu thay đổi" : "Thêm câu hỏi"}
                 </button>
-                <button type="button" className={styles.cancelButton} onClick={closeModal}>
-                  Huỷ
-                </button>
+                <button type="button" className={styles.cancelButton} onClick={closeModal}>Huỷ</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </MainLayout>
   );
 }

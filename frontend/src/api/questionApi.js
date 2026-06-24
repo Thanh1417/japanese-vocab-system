@@ -15,3 +15,7 @@ export const updateQuestionApi = (questionId, data) => {
 export const deleteQuestionApi = (questionId) => {
   return axiosClient.delete(`/questions/${questionId}`);
 };
+
+export const autoGenerateQuestionsApi = async (lessonId, data) => {
+  return await axiosClient.post(`/questions/auto-generate/${lessonId}`, data);
+};

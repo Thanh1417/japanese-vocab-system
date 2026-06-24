@@ -1,80 +1,118 @@
-.title {
-  margin: 0 0 20px;
-  font-size: 32px;
-}
-
-.form {
-  background: var(--color-white);
-  padding: 20px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+/* =========================================
+   1. KHU VỰC HEADER VÀ NÚT BẤM CHÍNH
+========================================= */
+.headerArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
   margin-bottom: 24px;
 }
 
-.formTitle {
-  margin-bottom: 18px;
+.title {
+  margin: 0 0 8px;
+  font-size: 32px;
+  color: #1e293b;
 }
 
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+.subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
 }
 
-.formGroup,
-.formGroupFull {
+.actionGroup {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 12px;
+  align-items: center;
 }
 
-.formGroupFull {
-  grid-column: span 2;
-}
-
-.formGroup input,
-.formGroup select,
-.formGroupFull textarea {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.actions {
-  margin-top: 18px;
-  display: flex;
-  gap: 10px;
-}
-
-.submitButton,
-.cancelButton,
-.editButton,
-.deleteButton {
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.submitButton {
-  background: var(--color-primary);
+.autoButton {
+  background-color: #10b981; 
   color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.autoButton:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+}
+
+.addButton {
+  background-color: #3b82f6; 
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.addButton:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   2. KHU VỰC BỘ LỌC (FILTER)
+========================================= */
+.filterBox {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 16px;
+  border: 1px solid #f1f5f9;
+}
+
+.filterInput {
+  flex: 2;
   padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
 }
 
-.cancelButton {
-  background: #e5e7eb;
+.filterInput:focus {
+  border-color: #3b82f6;
+}
+
+.filterSelect {
+  flex: 1;
   padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  background-color: white;
 }
 
-.message {
-  color: var(--color-muted);
+.resultText {
+  color: #64748b;
+  margin-bottom: 12px;
+  font-size: 14px;
 }
 
+/* =========================================
+   3. BẢNG DỮ LIỆU (TABLE) VÀ PHÂN TRANG
+========================================= */
 .tableWrapper {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
+  border: 1px solid #f1f5f9;
 }
 
 .table {
@@ -84,68 +122,112 @@
 
 .table th {
   background: #f8fafc;
-  padding: 14px;
+  padding: 16px;
   text-align: left;
   font-size: 14px;
-  color: var(--color-muted);
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
-  padding: 14px;
-  border-top: 1px solid var(--color-border);
-}
-
-.editButton {
-  background: #f59e0b;
-  color: white;
-  padding: 7px 10px;
-  margin-right: 8px;
-}
-
-.deleteButton {
-  background: #ef4444;
-  color: white;
-  padding: 7px 10px;
-}
-
-.filterBox {
-  background: var(--color-white);
   padding: 16px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  margin-bottom: 20px;
-  display: flex;
-  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
 }
 
-.filterInput {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.table tr:hover {
+  background-color: #f8fafc;
 }
 
-.filterSelect {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.sttCol {
+  color: #64748b;
+  font-weight: 600;
+  text-align: center;
 }
 
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
+.kanjiText {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 15px;
 }
+
+.correctText {
+  font-weight: 600;
+  color: #059669;
+}
+
+.tagTyping {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+}
+
+.tagChoice {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
+  display: inline-block;
+}
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.N5 { background: #e0e7ff; color: #3b82f6; }
+.N4 { background: #dcfce7; color: #16a34a; }
+.N3 { background: #fef9c3; color: #d97706; }
+.N2 { background: #ffedd5; color: #ea580c; }
+.N1 { background: #fee2e2; color: #dc2626; }
 
 .actionButtons {
   display: flex;
   gap: 8px;
-  align-items: center;
-  flex-wrap: nowrap;
+  justify-content: center;
 }
 
-.table th:last-child,
-.table td:last-child {
-  min-width: 160px;
+.editButton {
+  padding: 8px 16px;
+  background-color: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.editButton:hover {
+  background-color: #d97706;
+}
+
+.deleteButton {
+  padding: 8px 16px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #dc2626;
 }
 
 .pagination {
@@ -156,50 +238,68 @@
 }
 
 .pagination button {
-  padding: 8px 12px;
+  padding: 8px 16px;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
+  border-radius: 8px;
+  background-color: #3b82f6;
   color: white;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .pagination button:disabled {
-  opacity: 0.5;
+  background-color: #94a3b8;
   cursor: not-allowed;
 }
 
+.pagination span {
+  font-weight: 600;
+  color: #475569;
+}
 
-.headerArea {
+/* =========================================
+   4. HIỂN THỊ ĐÁP ÁN TRẮC NGHIỆM TRONG BẢNG
+========================================= */
+.questionContent {
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.optionsWrapper {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
 }
 
-.addButton {
-  background: var(--color-primary);
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s;
+.optionTag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #475569;
 }
 
-.addButton:hover {
-  opacity: 0.9;
+.optionCorrect {
+  background-color: #dcfce7;
+  border-color: #86efac;
+  color: #16a34a;
+  font-weight: 600;
 }
 
-/* MODAL / POPUP STYLES */
+/* =========================================
+   5. POPUP MODAL VÀ FORM TẠO/SỬA
+========================================= */
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -209,30 +309,38 @@
 .modalContent {
   background: white;
   width: 100%;
-  max-width: 650px;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  padding: 24px;
-  animation: slideDown 0.3s ease-out;
+  max-width: 600px;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  animation: modalIn 0.3s ease-out;
+  overflow: visible; 
 }
 
-@keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes modalIn {
+  from { 
+    transform: translateY(-20px) scale(0.95); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+  }
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 10px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
 }
 
 .modalHeader h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
+  color: #1e293b;
 }
 
 .closeModalBtn {
@@ -240,7 +348,8 @@
   border: none;
   font-size: 28px;
   cursor: pointer;
-  color: var(--color-muted);
+  color: #94a3b8;
+  line-height: 1;
 }
 
 .closeModalBtn:hover {
@@ -257,7 +366,8 @@
 .formGroupFull {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .formGroupFull {
@@ -268,25 +378,82 @@
 .formGroupFull label {
   font-weight: 600;
   font-size: 14px;
+  color: #475569;
 }
 
 .modalInput,
 .modalTextarea {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.modalInput:focus,
+.modalTextarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .modalActions {
-  margin-top: 24px;
+  margin-top: 30px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-/* AUTOCOMPLETE STYLES */
+.submitButton {
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.submitButton:hover {
+  background-color: #2563eb;
+}
+
+.autoGenerateBtn {
+  padding: 10px 20px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.autoGenerateBtn:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancelButton:hover {
+  background-color: #e2e8f0;
+}
+
+/* =========================================
+   6. AUTOCOMPLETE (SUGGESTIONS LIST)
+========================================= */
+
 .autocompleteWrapper {
   position: relative;
   width: 100%;
@@ -297,20 +464,20 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   max-height: 200px;
   overflow-y: auto;
-  z-index: 10;
+  z-index: 9999;
   margin: 4px 0 0 0;
   padding: 0;
   list-style: none;
 }
 
 .suggestionItem {
-  padding: 10px 12px;
+  padding: 12px 16px;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
@@ -328,10 +495,10 @@
 
 .suggWord {
   font-weight: 600;
-  color: var(--color-primary);
+  color: #3b82f6;
 }
 
 .suggMeaning {
   font-size: 13px;
-  color: var(--color-muted);
+  color: #64748b;
 }
