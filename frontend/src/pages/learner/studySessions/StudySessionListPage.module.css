@@ -1,17 +1,47 @@
+.headerArea {
+  margin-bottom: 24px;
+}
+
 .title {
-  margin: 0 0 20px;
   font-size: 32px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 8px 0;
 }
 
-.message {
-  color: var(--color-muted);
+.subtitle {
+  color: #64748b;
+  font-size: 15px;
+  margin: 0;
 }
 
+/* Empty state */
+.emptyState {
+  background: white;
+  padding: 40px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.primaryBtn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Table */
 .tableWrapper {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 
 .table {
@@ -21,52 +51,137 @@
 
 .table th {
   background: #f8fafc;
-  text-align: left;
-  padding: 14px;
-  color: var(--color-muted);
+  padding: 16px;
   font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
-  padding: 14px;
-  border-top: 1px solid var(--color-border);
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 15px;
+  vertical-align: middle;
 }
 
-.badge {
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #e0f2fe;
-  color: #0369a1;
+.table tr:hover {
+  background-color: #f8fafc;
+}
+
+.indexCol {
+  color: #1e293b;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Thời gian */
+.timeBlock {
+  font-size: 14px;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.timeBlock:last-child {
+  margin-bottom: 0;
+}
+
+.timeLabel {
+  display: inline-block;
+  width: 65px;
+  color: #94a3b8;
+  font-weight: 500;
   font-size: 13px;
 }
 
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
+.studyingText {
+  color: #f59e0b;
+  font-style: italic;
 }
 
-.detailLink {
-  color: var(--color-primary);
+/* Badges phân loại */
+.typeBadge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.typeFlashcard {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.typeChoice {
+  background: #e0e7ff;
+  color: #3b82f6;
+}
+
+.typeTyping {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+/* Điểm số */
+.scoreCorrect {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.scoreTotal {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.scoreNeutral {
+  color: #6366f1;
   font-weight: 600;
 }
 
+/* Nút Xem chi tiết */
+.detailLink {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.detailLink:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* Pagination */
 .pagination {
-  margin-top: 16px;
+  margin-top: 24px;
   display: flex;
   gap: 12px;
   align-items: center;
+  justify-content: center;
 }
 
 .pagination button {
-  padding: 8px 12px;
+  padding: 8px 16px;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
+  border-radius: 8px;
+  background: #3b82f6;
   color: white;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .pagination button:disabled {
-  opacity: 0.5;
+  background: #cbd5e1;
   cursor: not-allowed;
+}
+
+.pagination span {
+  font-weight: 600;
+  color: #475569;
 }

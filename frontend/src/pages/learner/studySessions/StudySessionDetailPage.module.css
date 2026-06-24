@@ -1,25 +1,94 @@
+.headerArea {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  background: white;
+  border: 1px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
 .title {
-  margin: 0 0 20px;
-  font-size: 32px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
 }
 
-.message {
-  color: var(--color-muted);
+/* Thống kê dạng lưới */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.summaryCard {
-  background: var(--color-white);
-  padding: 20px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  margin-bottom: 20px;
+.statBox {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  border: 1px solid #f1f5f9;
 }
 
+.statBox span {
+  display: block;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.statBox strong {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.typeText {
+  color: #3b82f6 !important;
+}
+
+.correct {
+  color: #10b981 !important;
+}
+
+/* Thông báo riêng cho Flashcard */
+.flashcardNotice {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 30px;
+  border-radius: 16px;
+  text-align: center;
+  color: #166534;
+}
+
+.flashcardNotice h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+}
+
+/* Table */
 .tableWrapper {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 
 .table {
@@ -29,23 +98,94 @@
 
 .table th {
   background: #f8fafc;
-  text-align: left;
-  padding: 14px;
-  color: var(--color-muted);
+  padding: 16px;
   font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
-  padding: 14px;
-  border-top: 1px solid var(--color-border);
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 15px;
+  color: #334155;
 }
 
-.correct {
+.indexCol {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.questionCol {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Status & Colors */
+.textCorrect {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.textWrong {
+  color: #ef4444;
+  font-weight: 600;
+  text-decoration: line-through;
+}
+
+.badgeCorrect {
+  background: #dcfce7;
   color: #16a34a;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.wrong {
+.badgeWrong {
+  background: #fee2e2;
   color: #dc2626;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Badge SRS Rating */
+.srsBadge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+  min-width: 90px;
+  text-align: center;
+}
+
+.srsAgain {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.srsHard {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.srsGood {
+  background: #e0e7ff;
+  color: #4f46e5;
+}
+
+.srsEasy {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

@@ -18,6 +18,12 @@ const getWrongVocabularies = async (account_id) => {
           },
         },
       },
+      // THÊM MỚI: Lấy thông tin từ vựng trực tiếp (dành cho Flashcard)
+      vocabulary: {
+        include: {
+          lesson: true,
+        },
+      },
     },
     orderBy: {
       answered_at: "desc",
