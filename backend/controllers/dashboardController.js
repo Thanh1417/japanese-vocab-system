@@ -18,6 +18,18 @@ const getOverview = async (req, res) => {
   }
 };
 
+const getAdminOverview = async (req, res) => {
+  try {
+    const range = req.query.range || "30";
+    const result = await dashboardService.getAdminDashboardStatistics(range);
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false, message: "Lỗi server!" });
+  }
+};
+
 module.exports = {
   getOverview,
+  getAdminOverview,
 };

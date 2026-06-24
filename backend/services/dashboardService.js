@@ -181,4 +181,64 @@ const getDashboardStatistics = async (account_id, range) => {
   };
 };
 
-module.exports = { getDashboardStatistics };
+const getAdminDashboardStatistics = async (range) => {
+  const { startDate, endDate, days } = getDateRange(range);
+
+  // 1. Thống kê thực thể hệ thống (Không phụ thuộc thời gian)
+  const totalUsers = await prisma.accounts.count({ where: { role: 'learner' } });
+  const totalVocabularies = await prisma.vocabularies.count();
+  const totalSystemQuestions = await prisma.questions.count();
+
+  // 2. Thống kê theo thời gian (Bộ lọc Range)
+  const totalSessions = await prisma.study_sessions.count({
+    where: { start_time: { gte: startDate, lte: endDate } }
+  });
+
+  const totalFavorites = await prisma.favorite_vocabularies.count({
+    where: { added_date: { gte: startDate, lte: endDate } }
+  });
+
+  // Quét toàn bộ kết quả trả lời câu hỏi trong hệ thống
+  const questionResults = await prisma.question_results.findMany({
+    where: { answered_at: { gte: startDate, lte: endDate } },
+    include: { question: { include: { vocabulary: true } } }
+  });
+
+  const totalQuestions = questionResults.length;
+  const totalCorrect = questionResults.filter(q => q.is_correct).length;
+  const totalWrong = totalQuestions - totalCorrect;
+  const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+  // 3. Tỷ lệ hoàn thành Mục tiêu học tập
+  const allGoals = await prisma.study_goals.findMany();
+  const completedGoals = allGoals.filter(g => g.status === 'completed').length;
+  const goalCompletionRate = allGoals.length > 0 ? Math.round((completedGoals / allGoals.length) * 100) : 0;
+
+  // 4. Nội dung được học nhiều nhất (Phân bổ theo Cấp độ)
+  const levelMap = { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 };
+  questionResults.forEach((res) => {
+    const level = res.question?.vocabulary?.jlpt_level;
+    if (level && levelMap[level] !== undefined) levelMap[level] += 1;
+  });
+  
+  // Sắp xếp giảm dần để lấy Top
+  const topLevels = Object.keys(levelMap)
+    .map(level => ({ level, count: levelMap[level] }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    success: true,
+    statusCode: 200,
+    data: {
+      range: days,
+      totalUsers, totalVocabularies, totalSystemQuestions,
+      totalSessions, totalQuestions, totalCorrect, totalWrong, accuracy, totalFavorites,
+      goalCompletionRate, topLevels
+    }
+  };
+};
+
+module.exports = { 
+  getDashboardStatistics, 
+  getAdminDashboardStatistics, 
+};
