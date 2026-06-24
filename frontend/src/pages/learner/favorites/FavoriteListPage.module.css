@@ -1,126 +1,256 @@
+.headerArea {
+  margin-bottom: 24px;
+}
+
 .title {
-  margin: 0 0 8px;
+  margin: 0 0 8px 0;
   font-size: 32px;
+  color: #1e293b;
+  font-weight: 700;
 }
 
-.description {
-  color: var(--color-muted);
+.subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.resultInfo {
   margin-bottom: 20px;
+  color: #64748b;
+  font-size: 15px;
 }
 
-.message,
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
+.highlight {
+  color: #3b82f6;
+  font-weight: 700;
+  font-size: 18px;
 }
 
+/* EMPTY STATE */
+.emptyState {
+  background: white;
+  padding: 60px 20px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  margin-top: 20px;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.emptyState h3 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 20px;
+}
+
+.emptyState p {
+  margin: 0;
+  color: #64748b;
+}
+
+/* TABLE */
 .tableWrapper {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  overflow-x: auto;
+  border: 1px solid #f1f5f9;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px;
 }
 
 .table th {
   background: #f8fafc;
+  padding: 16px;
   text-align: left;
-  padding: 14px;
-  color: var(--color-muted);
   font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
-  padding: 14px;
-  border-top: 1px solid var(--color-border);
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  color: #334155;
+  font-size: 15px;
 }
 
-.wordCell {
-  font-weight: 700;
+.tableRow {
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background-color: #f8fafc;
+}
+
+.vocabWord {
   font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.levelBadge,
-.lessonBadge {
-  display: inline-block;
+.vocabReading {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.vocabKanji {
+  color: #3b82f6;
+}
+
+.vocabMeaning {
+  font-weight: 500;
+}
+
+/* BADGES JLPT */
+.badge {
   padding: 4px 10px;
   border-radius: 999px;
-  font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
 }
 
-.levelBadge {
-  background: #e0f2fe;
-  color: #0369a1;
-}
+.N5 { background: #e0e7ff; color: #3b82f6; }
+.N4 { background: #dcfce7; color: #16a34a; }
+.N3 { background: #fef9c3; color: #d97706; }
+.N2 { background: #ffedd5; color: #ea580c; }
+.N1 { background: #fee2e2; color: #dc2626; }
 
-.lessonBadge {
-  background: #fef3c7;
-  color: #92400e;
-}
-
+/* ACTION GROUP BẢNG */
 .actionGroup {
   display: flex;
+  gap: 12px;
+  justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  padding-right: 8px;
 }
 
-.detailButton {
-  padding: 8px 12px;
+.detailBtnTable {
+  background: #f1f5f9;
+  color: #475569;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-.heartButton {
-  width: 38px;
-  height: 38px;
+.detailBtnTable:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.audioBtnTable {
+  background: #f1f5f9;
+  color: #3b82f6;
   border: none;
-  border-radius: 999px;
-  background: #ef4444;
-  color: white;
-  font-size: 20px;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  line-height: 1;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.detailButton:hover,
-.heartButton:hover {
-  opacity: 0.9;
+.audioBtnTable:hover {
+  background: #e0e7ff;
+  transform: scale(1.05);
+}
+
+.starBtnTable {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.starActive {
+  color: #f59e0b !important;
+}
+
+.starBtnTable:hover {
+  transform: scale(1.1);
+  opacity: 0.7;
+}
+
+/* PAGINATION */
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  margin-bottom: 20px;
 }
 
 .pagination {
-  margin-top: 16px;
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
   align-items: center;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  gap: 16px;
 }
 
-.pagination button {
-  padding: 8px 12px;
+.pageBtn {
+  padding: 10px 20px;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: white;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.pagination button:disabled {
-  opacity: 0.5;
+.pageBtn:hover:not(:disabled) {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
+.pageIndicator {
+  color: #64748b;
+  font-size: 15px;
+}
+
+.pageIndicator strong {
+  color: #1e293b;
+}
+
+/* MODAL CHI TIẾT (Được làm mới) */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
   z-index: 999;
   display: flex;
   justify-content: center;
@@ -129,11 +259,12 @@
 }
 
 .modal {
-  width: min(720px, 100%);
+  width: min(600px, 100%);
   background: white;
   border-radius: 24px;
-  padding: 28px;
-  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+  padding: 32px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
 }
 
 .modalHeader {
@@ -145,109 +276,150 @@
 
 .modalWord {
   margin: 0;
-  font-size: 44px;
+  font-size: 40px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .modalReading {
   margin: 8px 0 0;
-  color: var(--color-muted);
-  font-size: 20px;
+  color: #64748b;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .closeButton {
   width: 40px;
   height: 40px;
   border: none;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #f1f5f9;
+  color: #64748b;
   cursor: pointer;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
+  transition: 0.2s;
+}
+
+.closeButton:hover {
+  background: #e2e8f0;
+  color: #ef4444;
+  transform: rotate(90deg);
 }
 
 .badgeRow {
   display: flex;
   gap: 10px;
-  margin: 18px 0;
+  margin: 20px 0;
   flex-wrap: wrap;
+}
+
+.lessonBadge {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12px;
 }
 
 .detailGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  gap: 16px;
 }
 
 .detailItem {
   background: #f8fafc;
-  padding: 14px;
-  border-radius: var(--radius-md);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
 }
 
 .detailItem span,
 .exampleBox span {
   display: block;
-  margin-bottom: 6px;
-  color: var(--color-muted);
-  font-size: 14px;
+  margin-bottom: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .detailItem strong {
+  font-size: 16px;
+  color: #334155;
   line-height: 1.5;
 }
 
 .exampleBox {
   margin-top: 16px;
-  background: #f8fafc;
-  padding: 14px;
-  border-radius: var(--radius-md);
+  background: #f0f9ff;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e0f2fe;
+}
+
+.exampleBox span {
+  color: #0284c7;
 }
 
 .exampleBox p {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.6;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .modalActions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
   flex-wrap: wrap;
 }
 
 .audioButton,
 .removeButton {
+  flex: 1;
   border: none;
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 14px 20px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 15px;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .audioButton {
-  background: #dcfce7;
-  color: #166534;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.audioButton:hover {
+  background: #dbeafe;
 }
 
 .removeButton {
-  background: #ef4444;
-  color: white;
+  background: #fef2f2;
+  color: #ef4444;
 }
 
-@media (max-width: 768px) {
-  .tableWrapper {
-    overflow-x: auto;
-  }
+.removeButton:hover {
+  background: #fee2e2;
+}
 
-  .modal {
-    padding: 20px;
-  }
-
-  .modalWord {
-    font-size: 34px;
-  }
-
+@media (max-width: 600px) {
   .detailGrid {
     grid-template-columns: 1fr;
+  }
+  
+  .modalActions {
+    flex-direction: column;
   }
 }

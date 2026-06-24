@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-
 import MainLayout from "../../../layouts/MainLayout";
-
 import {
   getMyFavoritesApi,
   removeFavoriteVocabularyApi,
@@ -25,9 +23,7 @@ function FavoriteListPage() {
   const fetchFavorites = async () => {
     try {
       setError("");
-
       const res = await getMyFavoritesApi();
-
       setFavorites(res.data.data || res.data);
     } catch (error) {
       setError(
@@ -47,25 +43,17 @@ function FavoriteListPage() {
     return item.vocabulary || item;
   });
 
-  const jlptOrder = {
-    N5: 1,
-    N4: 2,
-    N3: 3,
-    N2: 4,
-    N1: 5,
-  };
+  const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
 
   const sortedFavorites = [...normalizedFavorites].sort((a, b) => {
     const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
-
     if (levelCompare !== 0) {
       return levelCompare;
     }
-
     return a.vocabulary_id - b.vocabulary_id;
   });
 
-  const totalPages = Math.ceil(sortedFavorites.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedFavorites.length / itemsPerPage) || 1;
 
   const paginatedFavorites = sortedFavorites.slice(
     (currentPage - 1) * itemsPerPage,
@@ -83,7 +71,6 @@ function FavoriteListPage() {
   const handleRemoveFavorite = async (vocabularyId) => {
     try {
       setError("");
-
       await removeFavoriteVocabularyApi(vocabularyId);
 
       setFavorites((prev) =>
@@ -105,44 +92,59 @@ function FavoriteListPage() {
     }
   };
 
-  const handlePlayAudio = (vocab) => {
-    if (!vocab.audio_url) {
-      return;
-    }
+  // Đồng bộ tính năng phát âm Text-to-Speech như trang Danh sách từ vựng
+  const handlePlayAudio = (text) => {
+    if (!text) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
 
-    const audio = new Audio(vocab.audio_url);
-    audio.play();
+      const voices = window.speechSynthesis.getVoices();
+      const japaneseVoices = voices.filter(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
+      if (japaneseVoices.length > 0) {
+        const femaleVoice = japaneseVoices.find(v =>
+          v?.name?.includes('Google') || v?.name?.includes('Kyoko') || v?.name?.includes('Haruka') || v?.name?.includes('Nanami')
+        );
+        utterance.voice = femaleVoice || japaneseVoices[0];
+      }
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Trình duyệt không hỗ trợ phát âm");
+    }
   };
 
   const formatLessonName = (lessonName) => {
-    if (!lessonName) {
-      return "";
-    }
-
+    if (!lessonName) return "";
     return lessonName.replace("Minna no Nihongo - ", "");
   };
 
   return (
     <MainLayout>
-      <h1 className={styles.title}>Từ vựng yêu thích</h1>
-
-      <p className={styles.description}>
-        Danh sách các từ vựng bạn đã lưu để ôn tập lại nhanh hơn.
-      </p>
+      <div className={styles.headerArea}>
+        <h1 className={styles.title}>Từ vựng yêu thích</h1>
+        <p className={styles.subtitle}>
+          Danh sách các từ vựng bạn đã lưu để ôn tập lại nhanh hơn.
+        </p>
+      </div>
 
       <ErrorMessage message={error} />
 
       {loading && <LoadingMessage />}
 
       {!loading && !error && sortedFavorites.length === 0 && (
-        <p className={styles.message}>Bạn chưa có từ vựng yêu thích nào</p>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>⭐</div>
+          <h3>Chưa có từ vựng yêu thích</h3>
+          <p>Bạn chưa lưu từ vựng nào. Hãy khám phá danh sách từ vựng và đánh dấu sao những từ bạn muốn ôn tập nhé!</p>
+        </div>
       )}
 
       {!loading && !error && sortedFavorites.length > 0 && (
         <>
-          <p className={styles.resultText}>
-            Bạn đang lưu <strong>{sortedFavorites.length}</strong> từ yêu thích
-          </p>
+          <div className={styles.resultInfo}>
+            Bạn đang lưu <span className={styles.highlight}>{sortedFavorites.length}</span> từ yêu thích
+          </div>
 
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
@@ -150,41 +152,42 @@ function FavoriteListPage() {
                 <tr>
                   <th>Từ vựng</th>
                   <th>Cách đọc</th>
+                  <th>Âm Hán</th>
                   <th>Nghĩa tiếng Việt</th>
-                  <th>JLPT</th>
-                  <th>Thao tác</th>
+                  <th>Cấp độ</th>
+                  <th style={{ textAlign: "right", paddingRight: "24px" }}>Hành động</th>
                 </tr>
               </thead>
 
               <tbody>
                 {paginatedFavorites.map((vocab) => (
-                  <tr key={vocab.vocabulary_id}>
-                    <td className={styles.wordCell}>{vocab.word}</td>
-                    <td>{vocab.reading || "-"}</td>
-                    <td>{vocab.vietnamese_meaning}</td>
+                  <tr key={vocab.vocabulary_id} className={styles.tableRow}>
+                    <td className={styles.vocabWord}>{vocab.word}</td>
+                    <td className={styles.vocabReading}>{vocab.reading || "-"}</td>
+                    <td className={styles.vocabKanji}>{vocab.kanji_meaning || "-"}</td>
+                    <td className={styles.vocabMeaning}>{vocab.vietnamese_meaning}</td>
                     <td>
-                      <span className={styles.levelBadge}>
+                      <span className={`${styles.badge} ${styles[vocab.jlpt_level] || ""}`}>
                         {vocab.jlpt_level}
                       </span>
                     </td>
 
-                    <td>
+                    <td style={{ textAlign: "right" }}>
                       <div className={styles.actionGroup}>
                         <button
-                          className={styles.detailButton}
-                          onClick={() => setSelectedVocabulary(vocab)}
+                          className={styles.audioBtnTable}
+                          onClick={() => handlePlayAudio(vocab.reading || vocab.word)}
+                          title="Nghe phát âm"
                         >
-                          Chi tiết
+                          ▶
                         </button>
 
                         <button
-                          className={styles.heartButton}
-                          onClick={() =>
-                            handleRemoveFavorite(vocab.vocabulary_id)
-                          }
+                          className={`${styles.starBtnTable} ${styles.starActive}`}
+                          onClick={() => handleRemoveFavorite(vocab.vocabulary_id)}
                           title="Bỏ yêu thích"
                         >
-                          ♥
+                          ★
                         </button>
                       </div>
                     </td>
@@ -194,21 +197,26 @@ function FavoriteListPage() {
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <button onClick={handlePrevPage} disabled={currentPage === 1}>
-              Trước
-            </button>
-
-            <span>
-              Trang {currentPage} / {totalPages || 1}
-            </span>
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || totalPages === 0}
-            >
-              Sau
-            </button>
+          <div className={styles.paginationWrapper}>
+            <div className={styles.pagination}>
+              <button
+                className={styles.pageBtn}
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+              >
+                &larr; Trước
+              </button>
+              <div className={styles.pageIndicator}>
+                Trang <strong>{currentPage}</strong> / {totalPages || 1}
+              </div>
+              <button
+                className={styles.pageBtn}
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                Sau &rarr;
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -239,7 +247,7 @@ function FavoriteListPage() {
             </div>
 
             <div className={styles.badgeRow}>
-              <span className={styles.levelBadge}>
+              <span className={`${styles.badge} ${styles[selectedVocabulary.jlpt_level] || ""}`}>
                 {selectedVocabulary.jlpt_level}
               </span>
 
@@ -274,7 +282,6 @@ function FavoriteListPage() {
 
             <div className={styles.exampleBox}>
               <span>Ví dụ minh hoạ</span>
-
               <p>
                 {selectedVocabulary.example_sentence ||
                   "Từ vựng này chưa có ví dụ minh hoạ."}
@@ -282,14 +289,12 @@ function FavoriteListPage() {
             </div>
 
             <div className={styles.modalActions}>
-              {selectedVocabulary.audio_url && (
-                <button
-                  className={styles.audioButton}
-                  onClick={() => handlePlayAudio(selectedVocabulary)}
-                >
-                  Nghe phát âm
-                </button>
-              )}
+              <button
+                className={styles.audioButton}
+                onClick={() => handlePlayAudio(selectedVocabulary.reading || selectedVocabulary.word)}
+              >
+                🔊 Nghe phát âm
+              </button>
 
               <button
                 className={styles.removeButton}
@@ -297,7 +302,7 @@ function FavoriteListPage() {
                   handleRemoveFavorite(selectedVocabulary.vocabulary_id)
                 }
               >
-                Bỏ yêu thích
+                ★ Bỏ yêu thích
               </button>
             </div>
           </div>
