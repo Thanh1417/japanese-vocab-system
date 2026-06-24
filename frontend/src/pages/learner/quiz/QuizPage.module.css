@@ -1,125 +1,585 @@
+/* =========================================
+   1. BỐ CỤC CHUNG
+========================================= */
+.headerArea {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
 .title {
-  margin: 0 0 20px;
+  margin: 0;
   font-size: 32px;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .message {
-  color: var(--color-muted);
+  color: #64748b;
+  font-size: 15px;
 }
 
-.quizCard {
-  background: var(--color-white);
-  padding: 28px;
+/* =========================================
+   2. SETUP CARD (CẤU HÌNH LÚC ĐẦU)
+========================================= */
+.quizSetupCard {
+  background: white;
+  padding: 32px;
   border-radius: 16px;
-  box-shadow: var(--shadow-card);
-  max-width: 700px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: 0 auto;
+  border: 1px solid #f1f5f9;
 }
 
-.progress {
-  color: var(--color-muted);
+.setupTitle {
+  margin: 0 0 24px 0;
+  font-size: 22px;
+  color: #0f172a;
+  text-align: center;
 }
 
-.question {
-  margin: 16px 0;
-  font-size: 24px;
+.setupForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
 }
 
 .input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-bottom: 12px;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
 }
 
-.actions {
-  margin-top: 20px;
+.input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.submitButton {
-  padding: 10px 16px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
+.setupFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+
+.startBtn {
+  background-color: #3b82f6;
   color: white;
-  cursor: pointer;
-}
-
-.resultCard {
-  background: var(--color-white);
-  padding: 28px;
-  border-radius: 16px;
-  box-shadow: var(--shadow-card);
-  max-width: 500px;
-}
-
-.correct {
-  color: #16a34a;
-  font-weight: 600;
-  margin: 12px 0;
-}
-
-.wrong {
-  color: #dc2626;
-  font-weight: 600;
-  margin: 12px 0;
-}
-
-.cancelButton {
-  padding: 10px 16px;
+  padding: 12px 24px;
   border: none;
-  border-radius: var(--radius-md);
-  background: #e5e7eb;
-  color: var(--color-text);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
   cursor: pointer;
-  margin-left: 10px;
+  transition: background 0.2s;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
 }
 
-.cancelButton:hover {
-  opacity: 0.9;
+.startBtn:hover {
+  background-color: #2563eb;
+}
+
+/* =========================================
+   3. KHU VỰC ĐANG HỌC & PROGRESS BAR
+========================================= */
+.quizActiveCard {
+  background: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  margin: 0 auto;
+  border: 1px solid #f8fafc;
+}
+
+.quizHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.scoreText {
+  color: #10b981;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #3b82f6;
+  transition: width 0.4s ease;
+}
+
+/* =========================================
+   4. UI FLASHCARD (THẺ GHI NHỚ)
+========================================= */
+.flashcardContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  perspective: 1000px;
+}
+
+/* ANIMATION CHUYỂN THẺ BIẾN MẤT */
+.flashcardWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.swipeOut {
+  animation: swipeOutAnim 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.swipeIn {
+  animation: swipeInAnim 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes swipeOutAnim {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-100px) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes swipeInAnim {
+  0% {
+    transform: translateX(100px) scale(0.95);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Quan trọng: Tắt hiệu ứng lật từ từ khi thẻ đang bay ra ngoài */
+.instant {
+  transition: none !important;
+}
+
+/* Kích thước thẻ */
+.card {
+  width: 100%;
+  max-width: 500px;
+  height: 350px;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.cardFace {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 30px;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+}
+
+.cardFront {
+  background: white;
+}
+
+.cardBack {
+  background: #f8fafc;
+  transform: rotateY(180deg);
+  border-color: #3b82f6;
+}
+
+.wordText {
+  font-size: 54px;
+  margin: 0 0 10px;
+  color: #0f172a;
+}
+
+.readingText {
+  font-size: 22px;
+  color: #64748b;
+}
+
+.flipHint {
+  position: absolute;
+  bottom: 20px;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.meaningText {
+  font-size: 30px;
+  margin: 0 0 12px;
+  color: #0f172a;
+}
+
+.kanjiText {
+  font-size: 18px;
+  color: #3b82f6;
+  margin-bottom: 16px;
+}
+
+/* NÚT PHÁT ÂM HÌNH VIÊN THUỐC */
+.playAudioBtnFlashcard {
+  margin-top: 10px;
+  background-color: #f1f5f9;
+  color: #3b82f6;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  /* Bo tròn hoàn toàn tạo hình viên thuốc */
+  padding: 10px 24px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playAudioBtnFlashcard:hover {
+  background-color: #e0e7ff;
+  border-color: #bfdbfe;
+  transform: translateY(-2px);
+}
+
+.reviewActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 500px;
+  transition: opacity 0.3s;
+}
+
+.reviewActions.hidden {
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+.reviewButton {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.againButton {
+  background: #ef4444;
+}
+
+.hardButton {
+  background: #f59e0b;
+}
+
+.goodButton {
+  background: #3b82f6;
+}
+
+.easyButton {
+  background: #10b981;
+}
+
+.showAnswerBtn {
+  width: 100%;
+  max-width: 500px;
+  background: #e2e8f0;
+  color: #334155;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* =========================================
+   5. UI QUIZ (TỰ LUẬN & TRẮC NGHIỆM)
+========================================= */
+.questionText {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: #0f172a;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.typingArea {
+  margin-bottom: 24px;
+}
+
+.typingInput {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  text-align: center;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.typingInput:focus {
+  border-color: #3b82f6;
 }
 
 .optionGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin: 16px 0;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .optionButton {
-  padding: 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   background: white;
   cursor: pointer;
+  transition: all 0.2s;
   text-align: left;
-  font-size: 15px;
 }
 
-.optionButton:hover {
+.optionButton:hover:not(:disabled) {
   background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
 }
 
-.optionButton:disabled {
-  cursor: not-allowed;
+.optionLetter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-radius: 6px;
+  font-weight: 700;
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.optionText {
+  font-size: 16px;
+  color: #334155;
+  font-weight: 500;
 }
 
 .correctOption {
-  border: 2px solid #16a34a;
-  background: #dcfce7;
-  color: #166534;
-  font-weight: 600;
+  border-color: #10b981 !important;
+  background-color: #ecfdf5 !important;
+}
+
+.correctOption .optionLetter {
+  background-color: #10b981;
+  color: white;
 }
 
 .wrongOption {
-  border: 2px solid #dc2626;
-  background: #fee2e2;
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.wrongOption .optionLetter {
+  background-color: #ef4444;
+  color: white;
+}
+
+.feedbackArea {
+  min-height: 60px;
+  margin-bottom: 20px;
+}
+
+.feedbackCorrect {
+  background-color: #ecfdf5;
+  color: #065f46;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.feedbackWrong {
+  background-color: #fef2f2;
   color: #991b1b;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.quizActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+}
+
+.actionBtnPrimary,
+.actionBtnNext {
+  background-color: #3b82f6;
+  color: white;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionBtnNext {
+  background-color: #10b981;
+}
+
+.actionBtnCancel {
+  background-color: transparent;
+  color: #94a3b8;
+  padding: 10px;
+  border: none;
   font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.actionBtnCancel:hover {
+  color: #ef4444;
+}
+
+/* =========================================
+   6. MÀN HÌNH KẾT QUẢ
+========================================= */
+.resultCard {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.resultIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.resultTitle {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.resultScore {
+  font-size: 18px;
+  color: #64748b;
+  margin-bottom: 32px;
+}
+
+.resultScore span {
+  font-size: 32px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.statsGrid div {
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  font-size: 14px;
+}
+
+.statAgain {
+  background: #ef4444;
+}
+
+.statHard {
+  background: #f59e0b;
+}
+
+.statGood {
+  background: #3b82f6;
+}
+
+.statEasy {
+  background: #10b981;
 }
 
 @media (max-width: 640px) {
   .optionGrid {
     grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

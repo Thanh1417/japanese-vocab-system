@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import MainLayout from "../../../layouts/MainLayout";
 
@@ -9,6 +9,9 @@ import {
   endStudySessionApi,
   createQuestionResultApi,
 } from "../../../api/quizApi";
+
+import { getFlashcardVocabulariesApi } from "../../../api/vocabularyApi";
+import { submitSrsReviewApi } from "../../../api/srsApi";
 
 import { getAllLessonsApi } from "../../../api/lessonApi";
 import { getGoalDayDetailApi } from "../../../api/studyGoalApi";
@@ -21,133 +24,119 @@ import styles from "./QuizPage.module.css";
 
 function QuizPage() {
   const location = useLocation();
-
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const goalId = searchParams.get("goalId");
   const day = searchParams.get("day");
   const mode = searchParams.get("mode");
   const source = searchParams.get("source");
-  const isRecommendationMode = source === "recommendation";
 
   const isGoalDayMode = goalId && day;
+  const isRecommendationMode = source === "recommendation";
 
+  // Data States
   const [questions, setQuestions] = useState([]);
-  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [vocabularies, setVocabularies] = useState([]);
   const [lessons, setLessons] = useState([]);
 
+  // Active Session States
+  const [quizMode, setQuizMode] = useState(mode || "flashcard");
+  const [studyList, setStudyList] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isStarted, setIsStarted] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+
+  // Flashcard specific states
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [reviewStats, setReviewStats] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
+
+  const [animatingClass, setAnimatingClass] = useState("");
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Quiz specific states
+  const [sessionId, setSessionId] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [currentOptions, setCurrentOptions] = useState([]);
-
   const [answerResult, setAnswerResult] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
 
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
+  //Đặt giờ
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+
+  // Filter States
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedLessonId, setSelectedLessonId] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [sessionId, setSessionId] = useState(null);
-
-  const [selectedLevel, setSelectedLevel] = useState("");
-  const [selectedLessonId, setSelectedLessonId] = useState("");
-  const [quizMode, setQuizMode] = useState(mode || "typing");
-
-  const [isStarted, setIsStarted] = useState(false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
 
   const sessionIdRef = useRef(null);
   const currentIndexRef = useRef(0);
   const scoreRef = useRef(0);
   const showResultRef = useRef(false);
 
-  const jlptOrder = {
-    N5: 1,
-    N4: 2,
-    N3: 3,
-    N2: 4,
-    N1: 5,
-  };
+  const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
 
-  const fetchQuizData = async () => {
+  const fetchAllData = async () => {
     try {
       setError("");
+      setLoading(true);
 
-      const questionRes = await getQuizQuestionsApi();
-      const allQuestions = questionRes.data.data || questionRes.data;
+      const [questionRes, vocabRes, lessonRes] = await Promise.all([
+        getQuizQuestionsApi(),
+        getFlashcardVocabulariesApi(),
+        getAllLessonsApi()
+      ]);
+
+      let allQuestions = questionRes.data.data || questionRes.data;
+      let allVocabs = vocabRes.data.data || vocabRes.data;
 
       if (isRecommendationMode) {
         const recommendationRes = await getRecommendationsApi();
-        const recommendationData = recommendationRes.data.data || recommendationRes.data;
+        const recData = recommendationRes.data.data || recommendationRes.data;
+        const recVocabIds = recData.map(item => item.vocabulary_id);
 
-        const recommendationVocabularyIds = recommendationData.map(
-          (item) => item.vocabulary_id
-        );
-
-        const recommendationQuestions = allQuestions.filter((question) =>
-          recommendationVocabularyIds.includes(question.vocabulary_id)
-        );
-
-        setQuestions(recommendationQuestions);
+        allVocabs = recData;
+        allQuestions = allQuestions.filter(q => recVocabIds.includes(q.vocabulary_id));
         setLessons([]);
-
-        return;
       }
-
-      if (isGoalDayMode) {
+      else if (isGoalDayMode) {
         const dayRes = await getGoalDayDetailApi(goalId, day);
         const dayData = dayRes.data.data || dayRes.data;
         const dayWords = dayData.words || [];
+        const dayVocabIds = dayWords.map(word => word.vocabulary_id);
 
-        const dayVocabularyIds = dayWords.map((word) => word.vocabulary_id);
-
-        const dayQuestions = allQuestions.filter((question) =>
-          dayVocabularyIds.includes(question.vocabulary_id)
-        );
-
-        setQuestions(dayQuestions);
+        allVocabs = dayWords;
+        allQuestions = allQuestions.filter(q => dayVocabIds.includes(q.vocabulary_id));
         setLessons([]);
-
-        return;
+      }
+      else {
+        setLessons(lessonRes.data.data || lessonRes.data);
       }
 
-      const lessonRes = await getAllLessonsApi();
-
       setQuestions(allQuestions);
-      setLessons(lessonRes.data.data || lessonRes.data);
+      setVocabularies(allVocabs);
     } catch (error) {
-      setError(error.response?.data?.message || "Không thể tải dữ liệu quiz");
+      setError(error.response?.data?.message || "Không thể tải dữ liệu học tập");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchQuizData();
-  }, [goalId, day]);
-
-  useEffect(() => {
-    if (mode) {
-      setQuizMode(mode);
-    }
-  }, [mode]);
+  useEffect(() => { fetchAllData(); }, [goalId, day]);
+  useEffect(() => { if (mode) setQuizMode(mode); }, [mode]);
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
-  }, [sessionId]);
-
-  useEffect(() => {
     currentIndexRef.current = currentIndex;
-  }, [currentIndex]);
-
-  useEffect(() => {
     scoreRef.current = score;
-  }, [score]);
-
-  useEffect(() => {
     showResultRef.current = showResult;
-  }, [showResult]);
+  }, [sessionId, currentIndex, score, showResult]);
 
+  // LUÔN LƯU LẠI PHIÊN HỌC KHI THOÁT NGANG CHO CẢ 3 LOẠI
   useEffect(() => {
     return () => {
       if (sessionIdRef.current && !showResultRef.current) {
@@ -159,313 +148,338 @@ function QuizPage() {
     };
   }, []);
 
-  const normalizeText = (text) => {
-    return text
-      .toLowerCase()
-      .replace(/[.,;:()[\]{}]/g, "")
-      .replace(/[，。、「」『』？！]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  };
+  // Nhấn ENTER để tiếp tục
+  useEffect(() => {
+    const handleGlobalEnter = (e) => {
+      // Chỉ hoạt động khi đang làm Quiz (Trắc nghiệm/Tự luận) và ĐÃ trả lời xong
+      if (e.key === "Enter" && isStarted && !showResult && quizMode !== "flashcard") {
+        if (hasAnswered) {
+          e.preventDefault(); // Tránh lỗi cuộn trang
+          handleNextItem();   // Tự động nhảy sang câu tiếp theo
+        }
+      }
+    };
 
-  const formatLessonName = (lessonName) => {
-    if (!lessonName) {
-      return "";
-    }
+    window.addEventListener("keydown", handleGlobalEnter);
+    return () => window.removeEventListener("keydown", handleGlobalEnter);
+  }, [isStarted, showResult, quizMode, hasAnswered, currentIndex, studyList, sessionId, score]);
 
-    return lessonName.replace("Minna no Nihongo - ", "");
-  };
+  const formatLessonName = (lessonName) => lessonName ? lessonName.replace("Minna no Nihongo - ", "") : "";
 
   const filteredLessons = lessons
-    .filter((lesson) => {
-      return selectedLevel ? lesson.jlpt_level === selectedLevel : true;
-    })
-    .sort((a, b) => {
-      const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
+    .filter(lesson => selectedLevel ? lesson.jlpt_level === selectedLevel : true)
+    .sort((a, b) => (jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level]) || (a.lesson_id - b.lesson_id));
 
-      if (levelCompare !== 0) {
-        return levelCompare;
-      }
-
-      return a.lesson_id - b.lesson_id;
-    });
-
-  const filteredQuestions = questions.filter((question) => {
-    const matchLevel = selectedLevel
-      ? question.vocabulary?.jlpt_level === selectedLevel
-      : true;
-
-    const matchLesson = selectedLessonId
-      ? question.vocabulary?.lesson_id === Number(selectedLessonId)
-      : true;
-
-    return matchLevel && matchLesson;
-  });
-
-  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
-    const levelCompare =
-      jlptOrder[a.vocabulary?.jlpt_level] -
-      jlptOrder[b.vocabulary?.jlpt_level];
-
-    if (levelCompare !== 0) {
-      return levelCompare;
+  const getFilteredStudyList = () => {
+    if (quizMode === "flashcard") {
+      return vocabularies.filter(vocab => {
+        const matchLevel = selectedLevel ? vocab.jlpt_level === selectedLevel : true;
+        const matchLesson = selectedLessonId ? vocab.lesson_id === Number(selectedLessonId) : true;
+        return matchLevel && matchLesson;
+      }).sort((a, b) => a.vocabulary_id - b.vocabulary_id);
+    } else {
+      return questions.filter(question => {
+        const matchLevel = selectedLevel ? question.vocabulary?.jlpt_level === selectedLevel : true;
+        const matchLesson = selectedLessonId ? question.vocabulary?.lesson_id === Number(selectedLessonId) : true;
+        const matchType = question.question_type === quizMode;
+        return matchLevel && matchLesson && matchType;
+      }).sort((a, b) => a.question_id - b.question_id);
     }
+  };
 
-    const lessonCompare = a.vocabulary?.lesson_id - b.vocabulary?.lesson_id;
-
-    if (lessonCompare !== 0) {
-      return lessonCompare;
-    }
-
-    return a.question_id - b.question_id;
-  });
-
-  const currentQuestion = quizQuestions[currentIndex];
+  const currentStudyList = getFilteredStudyList();
+  const currentItem = studyList[currentIndex];
 
   const generateOptions = (question) => {
-    if (!question) {
-      return [];
-    }
-
-    const correctAnswer = question.correct_answer;
-
-    const wrongAnswers = questions
-      .filter((item) => {
-        return (
-          item.question_id !== question.question_id &&
-          item.correct_answer &&
-          normalizeText(item.correct_answer) !== normalizeText(correctAnswer)
-        );
-      })
-      .map((item) => item.correct_answer);
-
-    const uniqueWrongAnswers = [...new Set(wrongAnswers)];
-
-    const shuffledWrongAnswers = uniqueWrongAnswers.sort(
-      () => Math.random() - 0.5
-    );
-
-    const options = [correctAnswer, ...shuffledWrongAnswers.slice(0, 3)];
-
-    return options.sort(() => Math.random() - 0.5);
+    if (!question || question.question_type !== 'multiple_choice' || !Array.isArray(question.options)) return [];
+    return [...question.options].sort(() => Math.random() - 0.5);
   };
 
-  const handleChangeLevel = (e) => {
-    setSelectedLevel(e.target.value);
-    setSelectedLessonId("");
-  };
-
-  const handleStartQuiz = async () => {
-    if (sortedQuestions.length === 0) {
-      setError("Chưa có câu hỏi cho lựa chọn này");
+  const handleStartStudy = async () => {
+    if (currentStudyList.length === 0) {
+      setError(`Chưa có dữ liệu cho nội dung này. Vui lòng chọn bài khác!`);
       return;
     }
 
     try {
       setError("");
-
-      const sessionRes = await startStudySessionApi();
-
+      const sessionRes = await startStudySessionApi({ session_type: quizMode });
       setSessionId(sessionRes.data.data.session_id);
 
-      setQuizQuestions(sortedQuestions);
-      setCurrentOptions(generateOptions(sortedQuestions[0]));
-
+      setStudyList(currentStudyList);
       setCurrentIndex(0);
-      setSelectedAnswer("");
-      setAnswerResult(null);
-      setHasAnswered(false);
       setScore(0);
       setShowResult(false);
       setIsStarted(true);
-    } catch (error) {
-      setError(error.response?.data?.message || "Không thể bắt đầu phiên học");
+
+      if (quizMode === "flashcard") {
+        setIsFlipped(false);
+        setReviewStats({ again: 0, hard: 0, good: 0, easy: 0 });
+      } else {
+        setCurrentOptions(generateOptions(currentStudyList[0]));
+        setSelectedAnswer("");
+        setAnswerResult(null);
+        setHasAnswered(false);
+        setQuestionStartTime(Date.now());
+      }
+    } catch (err) {
+      setError("Không thể bắt đầu phiên học");
+      setIsStarted(false);
     }
   };
 
-  const checkAnswer = (answer) => {
-    return (
-      normalizeText(answer) === normalizeText(currentQuestion.correct_answer)
-    );
+  useEffect(() => {
+    if (!loading && !isStarted && !hasAutoStarted && (isRecommendationMode || isGoalDayMode)) {
+      if (currentStudyList.length > 0) {
+        setHasAutoStarted(true);
+        handleStartStudy();
+      } else if (vocabularies.length === 0 && questions.length === 0 && !error) {
+        setHasAutoStarted(true);
+        setError("Không tìm thấy nội dung học phù hợp.");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isStarted, hasAutoStarted, isRecommendationMode, isGoalDayMode, currentStudyList.length]);
+
+  const handleReviewSrs = async (rating) => {
+    if (!currentItem || isAnimating) return;
+    setIsAnimating(true);
+
+    const isCorrect = rating === "good" || rating === "easy";
+    if (isCorrect) setScore(prev => prev + 1);
+
+    setAnimatingClass(styles.swipeOut);
+    submitSrsReviewApi({ vocabulary_id: currentItem.vocabulary_id, is_correct: isCorrect })
+      .catch((err) => console.log("Lỗi cập nhật tiến độ", err));
+
+    setReviewStats((prev) => ({ ...prev, [rating]: prev[rating] + 1 }));
+
+    setTimeout(async () => {
+      if (currentIndex >= studyList.length - 1) {
+        if (sessionId) {
+          await endStudySessionApi(sessionId, {
+            total_questions: studyList.length,
+            correct_answers: score + (isCorrect ? 1 : 0),
+          });
+        }
+        setShowResult(true);
+        setIsAnimating(false);
+        return;
+      }
+
+      setIsFlipped(false);
+      setCurrentIndex((prev) => prev + 1);
+      setAnimatingClass(styles.swipeIn);
+
+      setTimeout(() => {
+        setAnimatingClass("");
+        setIsAnimating(false);
+      }, 300);
+
+    }, 300);
   };
 
+  const playAudio = (text) => {
+    if (!text) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      const voices = window.speechSynthesis.getVoices();
+      const japaneseVoices = voices.filter(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
+      if (japaneseVoices.length > 0) {
+        utterance.voice = japaneseVoices.find(v => v.name.includes('Google') || v.name.includes('Kyoko') || v.name.includes('Haruka')) || japaneseVoices[0];
+      }
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Trình duyệt không hỗ trợ phát âm.");
+    }
+  };
+
+  // ==========================================
+  // THUẬT TOÁN XỬ LÝ CHUỖI ĐÁP ÁN MỚI
+  // ==========================================
+
+  // Hàm làm sạch chuỗi: Bỏ ngoặc, bỏ khoảng trắng và các dấu câu thừa
+  const cleanText = (text) => {
+    if (!text) return "";
+    return text
+      .toLowerCase()
+      // 1. Xóa toàn bộ nội dung nằm trong () [] 「」
+      .replace(/\(.*?\)|\[.*?\]|「.*?」/g, "")
+      // 2. Xóa toàn bộ khoảng trắng và ký tự đặc biệt thừa
+      .replace(/[\s~～\-:;"'！？?!。、，]/g, "")
+      .trim();
+  };
+
+  const checkAnswer = (userAnswer) => {
+    if (!currentItem || !currentItem.correct_answer) return false;
+
+    const normalizedUser = cleanText(userAnswer);
+
+    // Tách đáp án đúng từ DB thành mảng các đáp án hợp lệ (cắt theo dấu phẩy, gạch chéo, chấm phẩy)
+    let validAnswers = currentItem.correct_answer
+      .split(/[,/;]/)
+      .map(ans => cleanText(ans))
+      .filter(ans => ans !== ""); // Bỏ các option bị rỗng sau khi làm sạch
+
+    // Fallback: Chống kẹt nếu toàn bộ đáp án DB nằm trong ngoặc (VD: "[カセット]" -> rỗng)
+    if (validAnswers.length === 0) {
+      validAnswers = currentItem.correct_answer
+        .split(/[,/;]/)
+        .map(ans => ans.toLowerCase().replace(/[\s~～\-:;"'！？?!。、，]/g, "")) // Chỉ bỏ khoảng trắng
+        .filter(ans => ans !== "");
+    }
+
+    // Nếu câu trả lời của user khớp với BẤT KỲ lựa chọn hợp lệ nào -> Đúng!
+    return validAnswers.includes(normalizedUser);
+  };
+
+  //SRS
   const saveAnswer = async (answer, isCorrect) => {
-    const newScore = isCorrect ? score + 1 : score;
+    const timeTaken = (Date.now() - questionStartTime) / 1000;
+
+    let rating = "again";
+
+    if (isCorrect) {
+      if (quizMode === "multiple_choice") {
+        if (timeTaken <= 3) rating = "easy";
+        else if (timeTaken <= 8) rating = "good";
+        else rating = "hard";
+      } else if (quizMode === "typing") {
+        if (timeTaken <= 6) rating = "easy";
+        else if (timeTaken <= 15) rating = "good";
+        else rating = "hard";
+      }
+    }
 
     await createQuestionResultApi({
       session_id: sessionId,
-      question_id: currentQuestion.question_id,
+      question_id: currentItem.question_id,
       user_answer: answer,
     });
 
-    if (isCorrect) {
-      setScore(newScore);
-    }
-
+    if (isCorrect) setScore(score + 1);
     setAnswerResult(isCorrect);
     setHasAnswered(true);
+
+    submitSrsReviewApi({
+      vocabulary_id: currentItem.vocabulary_id,
+      rating: rating,
+      session_id: sessionId
+    }).catch((err) => console.log("Lỗi cập nhật tiến độ SRS", err));
   };
 
-  const handleSubmitAnswer = async () => {
-    if (!selectedAnswer.trim()) {
-      setError("Hãy nhập đáp án");
-      return;
-    }
-
-    if (!currentQuestion) {
-      setError("Không tìm thấy câu hỏi hiện tại");
-      return;
-    }
-
-    try {
-      setError("");
-
-      const isCorrect = checkAnswer(selectedAnswer);
-
-      await saveAnswer(selectedAnswer, isCorrect);
-    } catch (error) {
-      setError(
-        error.response?.data?.message || "Không thể lưu kết quả câu hỏi"
-      );
-    }
+  const handleSubmitQuizAnswer = async () => {
+    if (!selectedAnswer.trim()) return setError("Hãy nhập đáp án");
+    setError("");
+    await saveAnswer(selectedAnswer, checkAnswer(selectedAnswer));
   };
 
   const handleSelectOption = async (option) => {
-    if (hasAnswered) {
-      return;
-    }
-
-    if (!currentQuestion) {
-      setError("Không tìm thấy câu hỏi hiện tại");
-      return;
-    }
-
-    try {
-      setError("");
-
-      setSelectedAnswer(option);
-
-      const isCorrect = checkAnswer(option);
-
-      await saveAnswer(option, isCorrect);
-    } catch (error) {
-      setError(
-        error.response?.data?.message || "Không thể lưu kết quả câu hỏi"
-      );
-    }
+    if (hasAnswered) return;
+    setError("");
+    setSelectedAnswer(option);
+    
+    // So sánh trực tiếp chuỗi gốc thay vì dùng hàm checkAnswer cắt gọt
+    const isCorrect = option.trim() === currentItem.correct_answer.trim();
+    
+    await saveAnswer(option, isCorrect);
   };
 
-  const handleNextQuestion = async () => {
+  const handleNextItem = async () => {
     const nextIndex = currentIndex + 1;
-
-    if (nextIndex >= quizQuestions.length) {
+    if (nextIndex >= studyList.length) {
       if (sessionId) {
-        await endStudySessionApi(sessionId, {
-          total_questions: quizQuestions.length,
-          correct_answers: score,
-        });
+        await endStudySessionApi(sessionId, { total_questions: studyList.length, correct_answers: score });
       }
-
       setShowResult(true);
       return;
     }
-
     setCurrentIndex(nextIndex);
-    setCurrentOptions(generateOptions(quizQuestions[nextIndex]));
-    setSelectedAnswer("");
-    setAnswerResult(null);
-    setHasAnswered(false);
-    setError("");
+    if (quizMode !== "flashcard") {
+      setCurrentOptions(generateOptions(studyList[nextIndex]));
+      setSelectedAnswer("");
+      setAnswerResult(null);
+      setHasAnswered(false);
+      setQuestionStartTime(Date.now());
+    }
   };
 
-  const handleFinishQuiz = async () => {
-    if (
-      !window.confirm(
-        "Bạn có chắc chắn muốn kết thúc bài quiz hiện tại không?"
-      )
-    ) {
-      return;
-    }
+  const handleBackToSetup = () => {
+    setIsStarted(false);
+    setShowResult(false);
+    setStudyList([]);
+    setSessionId(null);
+    setHasAutoStarted(false);
 
+    if (isRecommendationMode) {
+      navigate("/recommendations");
+    } else if (isGoalDayMode) {
+      navigate(-1);
+    }
+  };
+
+  const handleFinishEarly = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn kết thúc bài học không?")) return;
     if (sessionId) {
       await endStudySessionApi(sessionId, {
-        total_questions: hasAnswered ? currentIndex + 1 : currentIndex,
+        total_questions: quizMode === 'flashcard' || !hasAnswered ? currentIndex : currentIndex + 1,
         correct_answers: score,
       });
     }
-
     setShowResult(true);
   };
 
-  const handleBackToSelection = () => {
-    setIsStarted(false);
-    setShowResult(false);
-    setQuizQuestions([]);
-    setCurrentOptions([]);
-    setCurrentIndex(0);
-    setSelectedAnswer("");
-    setAnswerResult(null);
-    setHasAnswered(false);
-    setSessionId(null);
-  };
-
+  // Nâng cấp: Tô màu chính xác dựa trên hàm checkAnswer
   const getOptionClassName = (option) => {
-    if (!hasAnswered) {
-      return styles.optionButton;
-    }
+    if (!hasAnswered) return styles.optionButton;
 
-    const isCorrectOption =
-      normalizeText(option) === normalizeText(currentQuestion.correct_answer);
-
-    const isSelectedOption =
-      normalizeText(option) === normalizeText(selectedAnswer);
+    // So sánh trực tiếp chuỗi gốc (chỉ loại bỏ khoảng trắng thừa 2 đầu)
+    const isCorrectOption = option.trim() === currentItem.correct_answer.trim();
+    const isSelectedOption = option.trim() === selectedAnswer.trim();
 
     if (isCorrectOption) {
-      return `${styles.optionButton} ${styles.correctOption}`;
+      return `${styles.optionButton} ${styles.correctOption}`; // Luôn bôi xanh đáp án đúng
     }
-
     if (isSelectedOption && !isCorrectOption) {
-      return `${styles.optionButton} ${styles.wrongOption}`;
+      return `${styles.optionButton} ${styles.wrongOption}`; // Bôi đỏ nếu chọn sai
     }
 
     return styles.optionButton;
   };
 
+  const showSetupCard = !isGoalDayMode && !isRecommendationMode;
+
   return (
     <MainLayout>
-      <h1 className={styles.title}>Luyện tập Quiz</h1>
+      <div className={styles.headerArea}>
+        <h1 className={styles.title}>Học từ vựng và luyện tập</h1>
+      </div>
 
       <ErrorMessage message={error} />
 
-      {loading && <LoadingMessage text="Đang tải câu hỏi..." />}
+      {(loading || (!isStarted && !showSetupCard && !error)) && (
+        <LoadingMessage text="Đang chuẩn bị bài học..." />
+      )}
 
-      {!loading && !isStarted && !error && (
-        <div className={styles.quizCard}>
-          <h2>
-            {isGoalDayMode
-              ? `Luyện tập ngày ${day}`
-              : isRecommendationMode
-                ? "Luyện tập theo gợi ý"
-                : "Chọn nội dung luyện tập"}
-          </h2>
+      {!loading && !isStarted && !showResult && !error && showSetupCard && (
+        <div className={styles.quizSetupCard}>
+          <h2 className={styles.setupTitle}>Lựa chọn bài học</h2>
 
-          <select
-            className={styles.input}
-            value={quizMode}
-            onChange={(e) => setQuizMode(e.target.value)}
-            disabled={isGoalDayMode}
-          >
-            <option value="typing">Tự luận</option>
-            <option value="multiple_choice">Trắc nghiệm</option>
-          </select>
+          <div className={styles.setupForm}>
+            <div className={styles.formGroup}>
+              <label>Phương pháp học</label>
+              <select className={styles.input} value={quizMode} onChange={(e) => setQuizMode(e.target.value)}>
+                <option value="flashcard">Flashcard</option>
+                <option value="multiple_choice">Trắc nghiệm</option>
+                <option value="typing">Tự luận</option>
+              </select>
+            </div>
 
-          {!isGoalDayMode && !isRecommendationMode && (
-            <>
-              <select
-                className={styles.input}
-                value={selectedLevel}
-                onChange={handleChangeLevel}
-              >
+            <div className={styles.formGroup}>
+              <label>Cấp độ JLPT</label>
+              <select className={styles.input} value={selectedLevel} onChange={(e) => { setSelectedLevel(e.target.value); setSelectedLessonId(""); }}>
                 <option value="">Tất cả cấp độ</option>
                 <option value="N5">N5</option>
                 <option value="N4">N4</option>
@@ -473,127 +487,160 @@ function QuizPage() {
                 <option value="N2">N2</option>
                 <option value="N1">N1</option>
               </select>
-
-              <select
-                className={styles.input}
-                value={selectedLessonId}
-                onChange={(e) => setSelectedLessonId(e.target.value)}
-              >
+            </div>
+            <div className={styles.formGroup}>
+              <label>Bài học</label>
+              <select className={styles.input} value={selectedLessonId} onChange={(e) => setSelectedLessonId(e.target.value)}>
                 <option value="">Tất cả bài học</option>
-
-                {filteredLessons.map((lesson) => (
+                {filteredLessons.map(lesson => (
                   <option key={lesson.lesson_id} value={lesson.lesson_id}>
                     {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
                   </option>
                 ))}
               </select>
-            </>
-          )}
+            </div>
+          </div>
 
-          <p className={styles.message}>
-            Có {sortedQuestions.length} câu hỏi trong phiên học này.
-          </p>
-
-          <div className={styles.actions}>
-            <button className={styles.submitButton} onClick={handleStartQuiz}>
-              Bắt đầu luyện tập
-            </button>
+          <div className={styles.setupFooter}>
+            <p className={styles.message}>Tìm thấy <strong style={{ color: "#3b82f6" }}>{currentStudyList.length}</strong> từ vựng / câu hỏi</p>
+            <button className={styles.startBtn} onClick={handleStartStudy}>Bắt đầu học</button>
           </div>
         </div>
       )}
 
-      {!loading && isStarted && quizQuestions.length === 0 && (
-        <p className={styles.message}>Chưa có câu hỏi cho nội dung này</p>
-      )}
-
       {!loading && showResult && (
         <div className={styles.resultCard}>
-          <h2>Hoàn thành Quiz</h2>
-
-          <p>
-            Điểm số: {score} / {quizQuestions.length}
+          <div className={styles.resultIcon}>🏆</div>
+          <h2 className={styles.resultTitle}>Hoàn thành!</h2>
+          <p className={styles.resultScore}>
+            {quizMode === 'flashcard' ? (
+              <>Tổng số thẻ đã lật: <span>{studyList.length}</span></>
+            ) : (
+              <>Điểm số: <span>{score}</span> / {studyList.length}</>
+            )}
           </p>
 
-          <button
-            className={styles.submitButton}
-            type="button"
-            onClick={handleBackToSelection}
-          >
-            Quay lại chọn bài
+          {quizMode === 'flashcard' && (
+            <div className={styles.statsGrid}>
+              <div className={styles.statAgain}>Lại: {reviewStats.again}</div>
+              <div className={styles.statHard}>Khó: {reviewStats.hard}</div>
+              <div className={styles.statGood}>Được: {reviewStats.good}</div>
+              <div className={styles.statEasy}>Dễ: {reviewStats.easy}</div>
+            </div>
+          )}
+
+          <button className={styles.startBtn} onClick={handleBackToSetup}>
+            {isRecommendationMode || isGoalDayMode ? "Quay lại danh sách" : "Chọn bài khác"}
           </button>
         </div>
       )}
 
-      {!loading && isStarted && currentQuestion && !showResult && (
-        <div className={styles.quizCard}>
-          <p className={styles.progress}>
-            Câu {currentIndex + 1} / {quizQuestions.length}
-          </p>
+      {!loading && isStarted && !showResult && currentItem && (
+        <div className={styles.quizActiveCard}>
+          <div className={styles.quizHeader}>
+            <span className={styles.progressText}>Tiến độ: {currentIndex + 1} / {studyList.length}</span>
+            {quizMode !== 'flashcard' && <span className={styles.scoreText}>Điểm: {score}</span>}
+          </div>
 
-          <h2 className={styles.question}>{currentQuestion.content}</h2>
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${(currentIndex / studyList.length) * 100}%` }}></div>
+          </div>
 
-          {quizMode === "typing" && (
-            <input
-              className={styles.input}
-              value={selectedAnswer}
-              onChange={(e) => setSelectedAnswer(e.target.value)}
-              placeholder="Nhập đáp án..."
-              disabled={hasAnswered}
-            />
-          )}
+          {quizMode === "flashcard" && (
+            <div className={styles.flashcardContainer}>
+              <div className={`${styles.flashcardWrapper} ${animatingClass}`}>
 
-          {quizMode === "multiple_choice" && (
-            <div className={styles.optionGrid}>
-              {currentOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={getOptionClassName(option)}
-                  onClick={() => handleSelectOption(option)}
-                  disabled={hasAnswered}
+                <div
+                  className={`${styles.card} ${isFlipped ? styles.flipped : ""} ${isAnimating ? styles.instant : ""}`}
+                  onClick={() => { if (!isAnimating) setIsFlipped(!isFlipped) }}
                 >
-                  {option}
-                </button>
-              ))}
+                  <div className={`${styles.cardFace} ${styles.cardFront}`}>
+                    <h2 className={styles.wordText}>{currentItem.word}</h2>
+                    <span className={styles.flipHint}>Click để lật thẻ</span>
+                  </div>
+
+                  <div className={`${styles.cardFace} ${styles.cardBack}`}>
+                    <h2 className={styles.readingText}>{currentItem.reading || " "}</h2>
+                    <h2 className={styles.meaningText}>{currentItem.vietnamese_meaning}</h2>
+                    <p className={styles.kanjiText}>Âm Hán: {currentItem.kanji_meaning || "-"}</p>
+
+                    <button
+                      type="button"
+                      className={styles.playAudioBtnFlashcard}
+                      onClick={(e) => { e.stopPropagation(); playAudio(currentItem.reading || currentItem.word); }}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`${styles.reviewActions} ${!isFlipped ? styles.hidden : ""}`}>
+                  <button className={`${styles.reviewButton} ${styles.againButton}`} onClick={() => handleReviewSrs("again")}>Quên</button>
+                  <button className={`${styles.reviewButton} ${styles.hardButton}`} onClick={() => handleReviewSrs("hard")}>Khó</button>
+                  <button className={`${styles.reviewButton} ${styles.goodButton}`} onClick={() => handleReviewSrs("good")}>Được</button>
+                  <button className={`${styles.reviewButton} ${styles.easyButton}`} onClick={() => handleReviewSrs("easy")}>Rất Dễ</button>
+                </div>
+
+                {!isFlipped && <button className={styles.showAnswerBtn} onClick={() => setIsFlipped(true)}>Xem đáp án</button>}
+              </div>
             </div>
           )}
 
-          {answerResult === true && (
-            <p className={styles.correct}>Chính xác</p>
+          {quizMode !== "flashcard" && (
+            <>
+              <h2 className={styles.questionText}>{currentItem.content}</h2>
+
+              {quizMode === "typing" && (
+                <div className={styles.typingArea}>
+                  <input
+                    className={styles.typingInput}
+                    value={selectedAnswer}
+                    onChange={(e) => setSelectedAnswer(e.target.value)}
+                    placeholder="Nhập đáp án của bạn vào đây..."
+                    disabled={hasAnswered} autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !hasAnswered) handleSubmitQuizAnswer(); }}
+                  />
+                </div>
+              )}
+
+              {quizMode === "multiple_choice" && (
+                <div className={styles.optionGrid}>
+                  {currentOptions.map((option, index) => (
+                    <button key={index} className={getOptionClassName(option)} onClick={() => handleSelectOption(option)} disabled={hasAnswered}>
+                      <span className={styles.optionLetter}>{String.fromCharCode(65 + index)}</span>
+                      <span className={styles.optionText}>{option}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Chỉ hiển thị feedbackArea khi đang làm bài Tự luận (typing) */}
+              {quizMode === "typing" && (
+                <div className={styles.feedbackArea}>
+                  {answerResult === true &&
+                    <div className={styles.feedbackCorrect}>
+                      Chính xác! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
+                    </div>
+                  }
+                  {answerResult === false && (
+                    <div className={styles.feedbackWrong}>
+                      Sai rồi! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className={styles.quizActions}>
+                {quizMode === "typing" && !hasAnswered && (
+                  <button className={styles.actionBtnPrimary} onClick={handleSubmitQuizAnswer}>Kiểm tra</button>
+                )}
+                {hasAnswered && <button className={styles.actionBtnNext} onClick={handleNextItem}>Tiếp tục ➔</button>}
+              </div>
+            </>
           )}
 
-          {answerResult === false && quizMode === "typing" && (
-            <p className={styles.wrong}>
-              ❌ Sai. Đáp án đúng: {currentQuestion.correct_answer}
-            </p>
-          )}
-
-          <div className={styles.actions}>
-            {quizMode === "typing" && !hasAnswered && (
-              <button
-                className={styles.submitButton}
-                onClick={handleSubmitAnswer}
-              >
-                Trả lời
-              </button>
-            )}
-
-            {hasAnswered && (
-              <button
-                className={styles.submitButton}
-                onClick={handleNextQuestion}
-              >
-                Câu tiếp theo
-              </button>
-            )}
-
-            <button
-              className={styles.cancelButton}
-              type="button"
-              onClick={handleFinishQuiz}
-            >
-              Kết thúc
-            </button>
+          <div style={{ textAlign: "center", marginTop: "24px" }}>
+            <button className={styles.actionBtnCancel} onClick={handleFinishEarly}>Thoát phiên học</button>
           </div>
         </div>
       )}

@@ -46,9 +46,9 @@ model vocabularies {
   lesson lessons @relation(fields: [lesson_id], references: [lesson_id])
 
   questions questions[]
-
   favorite_vocabularies favorite_vocabularies[]
   vocabulary_progress vocabulary_progress[]
+  question_results      question_results[]
 }
 
 model questions {
@@ -57,8 +57,9 @@ model questions {
   content        String  @db.VarChar(255)
   question_type  String  @db.VarChar(50)
   correct_answer String  @db.VarChar(255)
+  options        Json?
 
-  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id])
+  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id], onDelete: Cascade)
   question_results question_results[]
 }
 
@@ -69,7 +70,7 @@ model favorite_vocabularies {
   added_date             DateTime @default(now())
 
   account    accounts     @relation(fields: [account_id], references: [account_id])
-  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id])
+  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id], onDelete: Cascade)
 
   @@unique([account_id, vocabulary_id])
 }
@@ -90,13 +91,16 @@ model study_sessions {
 model question_results {
   result_id   Int      @id @default(autoincrement())
   session_id  Int
-  question_id Int
-  user_answer String?  @db.VarChar(255)
+  question_id Int?    //Cho phép rỗng khi học Flashcard
+  vocabulary_id Int?     //Dành riêng cho Flashcard để biết học từ nào
+  user_answer String?  @db.VarChar(255) // Làm Quiz thì lưu câu trả lời, Flashcard thì để null
   is_correct  Boolean
+  rating  String? @db.VarChar(50) // 3. THÊM MỚI: Lưu 'again', 'hard', 'good', 'easy'
   answered_at DateTime @default(now())
 
   session  study_sessions @relation(fields: [session_id], references: [session_id])
-  question questions       @relation(fields: [question_id], references: [question_id])
+  question questions?       @relation(fields: [question_id], references: [question_id])
+  vocabulary vocabularies? @relation(fields: [vocabulary_id], references: [vocabulary_id], onDelete: Cascade)
 }
 
 model vocabulary_progress {
@@ -112,7 +116,7 @@ model vocabulary_progress {
   next_review_at   DateTime?
 
   account    accounts     @relation(fields: [account_id], references: [account_id])
-  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id])
+  vocabulary vocabularies @relation(fields: [vocabulary_id], references: [vocabulary_id], onDelete: Cascade)
 
   @@unique([account_id, vocabulary_id])
 }

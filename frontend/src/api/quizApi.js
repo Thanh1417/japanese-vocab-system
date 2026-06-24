@@ -4,10 +4,8 @@ export const getQuizQuestionsApi = () => {
   return axiosClient.get("/questions");
 };
 
-export const startStudySessionApi = () => {
-  return axiosClient.post("/study-sessions/start", {
-    session_type: "quiz",
-  });
+export const startStudySessionApi = (data) => {
+  return axiosClient.post("/study-sessions/start", data); 
 };
 
 export const endStudySessionApi = (sessionId, data) => {
