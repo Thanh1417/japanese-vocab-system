@@ -263,7 +263,7 @@ const getGoalDailyPlan = async (account_id, goal_id) => {
     return {
         success: true,
         statusCode: 200,
-        message: "Lấy kế hoạch học mỗi ngày thành công",
+        message: "Lấy lộ trình học mỗi ngày thành công",
         data: { goal, plans },
     };
 };

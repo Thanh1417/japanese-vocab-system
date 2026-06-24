@@ -153,7 +153,7 @@ function StudyGoalPage() {
             const data = res.data.data || res.data;
             setDailyPlan(data.plans || []);
         } catch (error) {
-            setError(error.response?.data?.message || "Không thể tải kế hoạch mỗi ngày");
+            setError(error.response?.data?.message || "Không thể tải lộ trình mỗi ngày");
         } finally {
             setPlanLoading(false);
         }
@@ -182,7 +182,7 @@ function StudyGoalPage() {
                     </p>
                 </div>
                 <button className={styles.addButton} onClick={() => openModal()}>
-                    Thêm mục tiêu
+                    Tạo mục tiêu học tập
                 </button>
             </div>
 
@@ -232,15 +232,7 @@ function StudyGoalPage() {
                                     <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className={styles.modalInput} required />
                                 </div>
 
-                                {editingId && (
-                                    <div className={styles.formGroup}>
-                                        <label>Trạng thái</label>
-                                        <select name="status" value={formData.status} onChange={handleChange} className={styles.modalInput}>
-                                            <option value="active">Đang học</option>
-                                            <option value="completed">Đã hoàn thành</option>
-                                        </select>
-                                    </div>
-                                )}
+
                             </div>
 
                             <div className={styles.modalActions}>
@@ -288,11 +280,7 @@ function StudyGoalPage() {
                                     <div className={styles.goalInfo}>
                                         <p><strong>Thời gian:</strong> {formatDate(goal.start_date)} - {formatDate(goal.end_date)}</p>
                                         <p><strong>Tiến độ từ vựng:</strong> {goal.learned_words || 0} / {goal.total_words}</p>
-                                        <p><strong>Trạng thái: </strong>
-                                            <span className={isCompleted ? styles.statusCompleted : styles.statusActive}>
-                                                {getStatusText(goal.status)}
-                                            </span>
-                                        </p>
+                                        
                                     </div>
 
                                     {/* SVG CIRCULAR PROGRESS BAR */}
@@ -316,7 +304,7 @@ function StudyGoalPage() {
                                 </div>
 
                                 <div className={styles.cardActions}>
-                                    <button className={styles.viewButton} onClick={() => handleViewPlan(goal)}>Xem kế hoạch</button>
+                                    <button className={styles.viewButton} onClick={() => handleViewPlan(goal)}>Xem lộ trình</button>
                                     <button className={styles.editButton} onClick={() => openModal(goal)}>Sửa</button>
                                     <button className={styles.deleteButton} onClick={() => handleDelete(goal.goal_id)}>Xoá</button>
                                 </div>
@@ -328,12 +316,12 @@ function StudyGoalPage() {
 
             {selectedGoal && (
                 <div className={styles.planSection}>
-                    <h2>Kế hoạch học mỗi ngày</h2>
+                    <h2>Lộ trình học mỗi ngày</h2>
                     <p className={styles.description}>
                         Mục tiêu: <strong>{selectedGoal.goal_name}</strong> - {selectedGoal.jlpt_level}
                     </p>
 
-                    {planLoading && <LoadingMessage text="Đang tải kế hoạch..." />}
+                    {planLoading && <LoadingMessage text="Đang tải lộ trình..." />}
 
                     {!planLoading && dailyPlan.length > 0 && (
                         <div className={styles.planGrid}>
