@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import MainLayout from "../../../layouts/MainLayout";
+import * as XLSX from "xlsx";
 
 import {
   createVocabularyApi,
@@ -40,6 +41,9 @@ function VocabularyManagementPage() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const autocompleteRef = useRef(null);
+
+  // Reference cho input nhập từ Excel
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     lesson_id: "",
@@ -249,38 +253,73 @@ function VocabularyManagementPage() {
     }
   };
 
+  // Xử lý upload và phân tích file Excel
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        setLoading(true);
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // Chuyển Excel thành mảng JSON
+        const rawData = XLSX.utils.sheet_to_json(sheet);
+
+        // Cần đảm bảo file Excel có các cột chuẩn: LessonID, Word, Reading, Kanji, Meaning, JLPT
+        const formattedData = rawData.map((row) => ({
+          lesson_id: Number(row.LessonID),
+          word: row.Word,
+          reading: row.Reading || "",
+          kanji_meaning: row.Kanji || "",
+          vietnamese_meaning: row.Meaning,
+          jlpt_level: row.JLPT || "N5"
+        }));
+
+        // GỌI API IMPORT TẠI ĐÂY (Bạn cần cấu hình endpoint này ở backend)
+        // await axios.post("/api/vocabularies/bulk", { data: formattedData });
+
+        setSuccess(`Import thành công ${formattedData.length} từ vựng!`);
+        fetchData();
+      } catch (err) {
+        setError("Lỗi import file. Vui lòng kiểm tra lại định dạng Excel.");
+      } finally {
+        setLoading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""; // Reset giá trị của input file
+        }
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   // Hàm phát âm Text-to-Speech
   const playAudio = (text) => {
     if (!text) return;
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); 
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      
-      utterance.lang = 'ja-JP';
-      
-      // 1. Chỉnh tốc độ (Rate): Mặc định là 1
-      utterance.rate = 1; 
-      
-      // 2. Chỉnh âm lượng (Volume): Mặc định là 1 (tối đa). Đảm bảo luôn phát ra tiếng to nhất.
-      utterance.volume = 1; 
 
-      // 3. Chỉnh giọng đọc (Voice): Tìm và ép chọn giọng nữ
+      utterance.lang = 'ja-JP';
+      utterance.rate = 1;
+      utterance.volume = 1;
+
       const voices = window.speechSynthesis.getVoices();
       const japaneseVoices = voices.filter(v => v.lang === 'ja-JP' || v.lang === 'ja_JP');
 
       if (japaneseVoices.length > 0) {
-        // Ưu tiên các giọng nữ nổi tiếng: Google (Android/Chrome), Kyoko (Mac/iOS), Haruka/Nanami (Windows)
-        const femaleVoice = japaneseVoices.find(v => 
-          v.name.includes('Google') || 
-          v.name.includes('Kyoko') || 
+        const femaleVoice = japaneseVoices.find(v =>
+          v.name.includes('Google') ||
+          v.name.includes('Kyoko') ||
           v.name.includes('Haruka') ||
           v.name.includes('Nanami')
         );
-        
-        // Nếu tìm thấy giọng nữ ưu tiên thì dùng, không thì lấy giọng tiếng Nhật đầu tiên có sẵn
         utterance.voice = femaleVoice || japaneseVoices[0];
       }
-      
+
       window.speechSynthesis.speak(utterance);
     } else {
       alert("Trình duyệt không hỗ trợ phát âm.");
@@ -291,9 +330,27 @@ function VocabularyManagementPage() {
     <MainLayout>
       <div className={styles.headerArea}>
         <h1 className={styles.title}>Quản lý từ vựng</h1>
-        <button className={styles.addButton} onClick={() => openModal()}>
-          Thêm từ vựng
-        </button>
+        <div className={styles.actionButtonsTop}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept=".xlsx, .xls, .csv"
+            onChange={handleFileUpload}
+          />
+          <button
+            className={styles.importButton}
+            onClick={() => fileInputRef.current.click()}
+          >
+            Nhập từ Excel
+          </button>
+          <button
+            className={styles.addButton}
+            onClick={() => openModal()}
+          >
+            Thêm từ vựng
+          </button>
+        </div>
       </div>
 
       <ErrorMessage message={error} />
@@ -361,12 +418,12 @@ function VocabularyManagementPage() {
                     <td>{vocab.vocabulary_id}</td>
                     <td className={styles.kanjiText}>{vocab.word}</td>
                     <td>{vocab.reading}</td>
-                    
+
                     {/* NÚT PHÁT ÂM */}
                     <td style={{ textAlign: "center" }}>
-                      <button 
+                      <button
                         type="button"
-                        className={styles.playAudioBtn} 
+                        className={styles.playAudioBtn}
                         onClick={() => playAudio(vocab.reading || vocab.word)}
                         title="Nghe phát âm"
                       >
@@ -391,9 +448,19 @@ function VocabularyManagementPage() {
           </div>
 
           <div className={styles.pagination}>
-            <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>Trước</button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Trước
+            </button>
             <span>Trang {currentPage} / {totalPages || 1}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0}>Sau</button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Sau
+            </button>
           </div>
         </>
       )}
@@ -409,8 +476,8 @@ function VocabularyManagementPage() {
 
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.formGrid}>
-                
-                {/* 1. Chọn Cấp độ JLPT */}
+
+                {/* Chọn Cấp độ JLPT */}
                 <div className={styles.formGroup}>
                   <label>Cấp độ JLPT</label>
                   <select name="jlpt_level" value={formData.jlpt_level} onChange={handleChange} className={styles.modalInput}>
@@ -422,7 +489,7 @@ function VocabularyManagementPage() {
                   </select>
                 </div>
 
-                {/* 2. Chọn Bài học (Được lọc theo Cấp độ ở trên) */}
+                {/* Chọn Bài học */}
                 <div className={styles.formGroup}>
                   <label>Bài học</label>
                   <select name="lesson_id" value={formData.lesson_id} onChange={handleChange} required className={styles.modalInput}>
@@ -435,7 +502,7 @@ function VocabularyManagementPage() {
                   </select>
                 </div>
 
-                {/* 3. Nhập Từ vựng (Có Autocomplete) */}
+                {/* Nhập Từ vựng (Có Autocomplete) */}
                 <div className={styles.formGroup} ref={autocompleteRef}>
                   <label>Từ vựng (Nhập để tìm kiếm mẫu)</label>
                   <div className={styles.autocompleteWrapper}>
@@ -462,31 +529,24 @@ function VocabularyManagementPage() {
                   </div>
                 </div>
 
-                {/* 4. Cách đọc */}
+                {/* Cách đọc */}
                 <div className={styles.formGroup}>
                   <label>Cách đọc</label>
                   <input name="reading" value={formData.reading} onChange={handleChange} placeholder="Ví dụ: にほん" className={styles.modalInput} />
                 </div>
 
-                {/* 5. Hán tự */}
+                {/* Hán tự */}
                 <div className={styles.formGroup}>
                   <label>Hán tự</label>
                   <input name="kanji_meaning" value={formData.kanji_meaning} onChange={handleChange} placeholder="Ví dụ: Nhật Bản" className={styles.modalInput} />
                 </div>
 
-                {/* 6. Nghĩa tiếng Việt */}
+                {/* Nghĩa tiếng Việt */}
                 <div className={styles.formGroup}>
                   <label>Nghĩa tiếng Việt</label>
                   <input name="vietnamese_meaning" value={formData.vietnamese_meaning} onChange={handleChange} placeholder="Ví dụ: Nước Nhật Bản" required className={styles.modalInput} />
                 </div>
 
-                {/* Đã xóa field nhập Audio URL ở đây */}
-
-                {/* 7. Ví dụ */}
-                <div className={styles.formGroupFull}>
-                  <label>Ví dụ</label>
-                  <textarea name="example_sentence" value={formData.example_sentence} onChange={handleChange} placeholder="Ví dụ: 私は学生です。" rows="3" className={styles.modalTextarea} />
-                </div>
               </div>
 
               <div className={styles.modalActions}>

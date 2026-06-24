@@ -120,6 +120,16 @@ const searchVocabulary = async (keyword) => {
   };
 };
 
+// Import từ vựng hàng loạt
+const bulkCreateVocabularies = async (vocabArray) => {
+  // skipDuplicates giúp bỏ qua các từ đã tồn tại
+  const result = await prisma.vocabularies.createMany({
+    data: vocabArray,
+    skipDuplicates: true, 
+  });
+  return { success: true, statusCode: 201, message: `Đã import thành công ${result.count} từ vựng!`, data: result };
+};
+
 module.exports = {
   getAllVocabularies,
   getVocabularyById,
@@ -128,4 +138,5 @@ module.exports = {
   updateVocabulary,
   deleteVocabulary,
   searchVocabulary,
+  bulkCreateVocabularies,
 };

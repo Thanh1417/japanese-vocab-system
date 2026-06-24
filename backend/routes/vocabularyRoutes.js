@@ -6,22 +6,20 @@ const verifyToken = require("../middlewares/authMiddleware");
 const checkRole = require("../middlewares/roleMiddleware");
 
 // Learner + Admin đều được xem từ vựng
-router.get("/", verifyToken, vocabularyController.getVocabularies);
+router.get("/", vocabularyController.getVocabularies);
 
 // Lấy từ vựng theo bài học
 router.get(
-    "/lesson/:lessonId",
-    verifyToken,
-    vocabularyController.getVocabulariesByLesson
+  "/lesson/:lessonId",
+  vocabularyController.getVocabulariesByLesson
 );
 
 router.get(
   "/search",
-  verifyToken,
   vocabularyController.searchVocabulary
 );
 
-router.get("/:id", verifyToken, vocabularyController.getVocabularyDetail);
+router.get("/:id", vocabularyController.getVocabularyDetail);
 
 // Chỉ admin được thêm/sửa/xóa từ vựng
 router.post(
