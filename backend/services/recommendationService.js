@@ -81,13 +81,23 @@ const getRecommendations = async (account_id) => {
     account_id
   );
 
-  const wrongVocabularies = wrongResults.map((item) => ({
-    ...item.question.vocabulary,
-    type: "wrong",
-    typeLabel: "Từ độ khó cao",
-    reason: "Bạn từng trả lời sai từ này trong bài luyện tập",
-    priority: "medium",
-  }));
+  // ĐÃ SỬA LẠI ĐOẠN NÀY ĐỂ BẮT LỖI NULL
+  const wrongVocabularies = wrongResults
+    .map((item) => {
+      // Thông minh: Lấy từ vựng từ Flashcard (item.vocabulary) HOẶC từ Quiz (item.question.vocabulary)
+      const vocab = item.vocabulary || item.question?.vocabulary;
+
+      if (!vocab) return null; // An toàn tuyệt đối
+
+      return {
+        ...vocab,
+        type: "wrong",
+        typeLabel: "Từ độ khó cao",
+        reason: "Bạn từng trả lời sai (hoặc bấm Quên) từ này trong bài luyện tập",
+        priority: "medium",
+      };
+    })
+    .filter((item) => item !== null); // Lọc bỏ các kết quả null
 
   const newWords = await getNewWordsFromGoal(account_id);
 
