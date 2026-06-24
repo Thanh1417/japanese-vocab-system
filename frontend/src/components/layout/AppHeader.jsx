@@ -18,9 +18,9 @@ function AppHeader() {
       <div className={styles.userBox}>
         <span>{user?.full_name}</span>
 
-        <button className={styles.logoutButton} onClick={handleLogout}>
+        {/* <button className={styles.logoutButton} onClick={handleLogout}>
           Đăng xuất
-        </button>
+        </button> */}
       </div>
     </header>
   );

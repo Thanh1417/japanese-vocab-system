@@ -1,89 +1,87 @@
 .sidebar {
-  width: 220px;
-  background: var(--color-primary);
-  color: var(--color-white);
-  min-height: 100vh;
-  padding: 20px;
+  width: 260px;
+  background: #1e293b;
+  color: #f8fafc;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.logoSection {
+  text-align: center;
+  padding: 30px 0;
 }
 
 .logo {
-  margin: 0;
-  margin-bottom: 30px;
+  font-size: 28px;
+  color: #3b82f6; 
+  letter-spacing: 1px;
+}
+
+.userBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  margin: 0 20px 20px 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
 .nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 0 20px;
+  gap: 4px; 
 }
 
 .link {
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-
-  color: inherit;
-  text-decoration: none;
-
-  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px; 
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 14.5px;
+  transition: all 0.3s;
 }
 
 .link:hover {
   background: #334155;
+  color: #fff;
 }
 
 .active {
-  background: white;
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.userBox {
-  margin-bottom: 24px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-}
-
-.userName {
-  margin: 0;
-  font-weight: 600;
-}
-
-.userRole {
-  margin: 4px 0 0;
-  font-size: 14px;
-  opacity: 0.8;
+  background: #3b82f6;
+  color: white;
 }
 
 .logoutButton {
-  margin-top: 30px;
-
-  width: 100%;
-
-  padding: 10px 12px;
-
-  border: none;
-  border-radius: var(--radius-md);
-
-  background: #ef4444;
-  color: white;
-
+  margin: 20px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    min-height: auto;
-  }
-
-  .nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .link {
-    font-size: 14px;
-  }
+.logoutButton:hover {
+  border-color: #ef4444;
+  color: #ef4444;
 }
-

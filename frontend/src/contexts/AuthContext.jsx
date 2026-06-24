@@ -5,6 +5,9 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
+  
+  // 1. Thêm state loading, mặc định ban đầu là true (đang tải)
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
@@ -12,6 +15,9 @@ export function AuthProvider({ children }) {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    
+    // 2. Sau khi đọc xong dữ liệu user, chuyển loading thành false
+    setLoading(false);
   }, []);
 
   const login = (loginData) => {
@@ -40,6 +46,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         isAuthenticated,
+        loading,
       }}
     >
       {children}
