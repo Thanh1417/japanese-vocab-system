@@ -1,17 +1,78 @@
+/* =========================================
+   1. HEADER AREA
+========================================= */
+.headerArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
 .title {
-  margin: 0 0 20px;
+  margin: 0 0 8px;
   font-size: 32px;
+  color: #1e293b;
 }
 
-.message {
-  color: var(--color-muted);
+.subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
 }
 
+/* =========================================
+   2. BỘ LỌC (FILTER BOX)
+========================================= */
+.filterBox {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 16px;
+  border: 1px solid #f1f5f9;
+}
+
+.filterInput {
+  flex: 2;
+  padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.filterInput:focus {
+  border-color: #3b82f6;
+}
+
+.filterSelect {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  background-color: white;
+}
+
+.resultText {
+  color: #64748b;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+/* =========================================
+   3. BẢNG DỮ LIỆU (TABLE)
+========================================= */
 .tableWrapper {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 
 .table {
@@ -21,56 +82,126 @@
 
 .table th {
   background: #f8fafc;
-  padding: 14px;
+  padding: 16px;
   text-align: left;
-  color: var(--color-muted);
   font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .table td {
-  padding: 14px;
-  border-top: 1px solid var(--color-border);
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
 }
 
-.select {
-  padding: 7px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.table tr:hover {
+  background-color: #f8fafc;
+}
+
+.nameText {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.emailText {
+  color: #475569;
+}
+
+.dateText {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* =========================================
+   4. NÚT THAO TÁC (BADGES & BUTTONS)
+========================================= */
+.selectBadge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  outline: none;
+  cursor: pointer;
+  appearance: none; /* Ẩn mũi tên mặc định của select */
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.selectBadge:hover {
+  filter: brightness(0.95);
+}
+
+/* Màu sắc cho Vai trò (Role) */
+.roleAdmin {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border-color: #d8b4fe;
+}
+
+.roleLearner {
+  background-color: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* Màu sắc cho Trạng thái (Status) */
+.statusActive {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border-color: #86efac;
+}
+
+.statusLocked {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
 .deleteButton {
-  padding: 7px 10px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: #ef4444;
+  padding: 8px 16px;
+  background-color: #ef4444;
   color: white;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
 }
 
-.filterBox {
-  background: var(--color-white);
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  margin-bottom: 20px;
+.deleteButton:hover {
+  background-color: #dc2626;
+}
+
+/* =========================================
+   5. PHÂN TRANG (PAGINATION)
+========================================= */
+.pagination {
+  margin-top: 16px;
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
-.filterInput {
-  flex: 1;
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.pagination button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #3b82f6;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.filterSelect {
-  padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.pagination button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
 }
 
-.resultText {
-  color: var(--color-muted);
-  margin-bottom: 12px;
+.pagination span {
+  font-weight: 600;
+  color: #475569;
 }

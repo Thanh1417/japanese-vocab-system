@@ -85,9 +85,7 @@ function DashboardPage() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Thống kê học tập</h1>
-          <p className={styles.subtitle}>
-            Bức tranh toàn cảnh về nỗ lực và tiến độ học tiếng Nhật của bạn.
-          </p>
+          <p className={styles.subtitle}>Tổng hợp tiến độ học tập của bạn</p>
         </div>
 
         <select
