@@ -34,7 +34,25 @@ const login = async (req, res) => {
   }
 };
 
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    const result = await authService.loginWithGoogle(credential);
+
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Loi server!",
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  googleLogin,
 };

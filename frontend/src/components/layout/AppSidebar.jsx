@@ -1,18 +1,44 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { 
-  MdDashboard, MdLibraryBooks, MdTranslate, MdQuestionAnswer, 
-  MdPeople, MdLogout, MdFavorite, MdLightbulb, MdHistory, MdQuiz 
+import {
+  MdDashboard, MdLibraryBooks, MdTranslate, MdQuestionAnswer,
+  MdPeople, MdLogout, MdFavorite, MdLightbulb, MdHistory, MdQuiz
 } from "react-icons/md";
 import styles from "./AppSidebar.module.css";
+import Swal from "sweetalert2";
+
 
 function AppSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+
+    const result = await Swal.fire({
+      title: "Đăng xuất?",
+      text: "Bạn có chắc chắn muốn đăng xuất?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Đăng xuất",
+      cancelButtonText: "Hủy",
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#6b7280",
+    });
+
+    if (!result.isConfirmed) return;
+
     logout();
-    navigate("/login");
+
+    navigate("/login", {
+      replace: true,
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Đã đăng xuất",
+      timer: 1200,
+      showConfirmButton: false,
+    });
   };
 
   const getLinkClass = ({ isActive }) => {

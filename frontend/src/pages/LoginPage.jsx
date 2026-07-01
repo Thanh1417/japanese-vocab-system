@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-import { loginApi } from "../api/authApi";
+import { loginApi, loginGoogleApi } from "../api/authApi";
+import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../contexts/AuthContext";
 
 import ErrorMessage from "../components/common/ErrorMessage";
@@ -11,6 +12,7 @@ function LoginPage() {
   const [email, setEmail] = useState("login@test.com");
   const [password, setPassword] = useState("123456");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -31,6 +33,7 @@ function LoginPage() {
       login({
         token: res.data.token,
         user,
+        rememberMe,
       });
 
       if (user.role === "admin") {
@@ -40,6 +43,35 @@ function LoginPage() {
       }
     } catch (error) {
       setError(error.response?.data?.message || "Đăng nhập thất bại");
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError("");
+
+      const res = await loginGoogleApi(
+        credentialResponse.credential
+      );
+
+      const user = res.data.user;
+
+      login({
+        token: res.data.token,
+        user,
+        rememberMe,
+      });
+
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+        "Đăng nhập Google thất bại"
+      );
     }
   };
 
@@ -76,15 +108,51 @@ function LoginPage() {
             />
           </div>
 
+          <div
+            className={styles.formGroup}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <input
+              type="checkbox"
+              id="remember"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ width: "18px", height: "18px" }}
+            />
+
+            <label htmlFor="remember">
+              Ghi nhớ đăng nhập
+            </label>
+          </div>
+
           <button className={styles.button} type="submit">
             Đăng nhập
           </button>
         </form>
 
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setError("Đăng nhập Google thất bại");
+            }}
+          />
+        </div>
+
         <p className={styles.footerText}>
           Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
-        
+
       </div>
     </div>
 

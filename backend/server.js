@@ -1,3 +1,4 @@
+require("dotenv").config();
 const cors = require("cors");
 
 const express = require("express");
@@ -36,6 +37,7 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/study-goals", studyGoalRoutes);
 
+console.log(process.env.GOOGLE_CLIENT_ID);
 
 const PORT = 3000;
 

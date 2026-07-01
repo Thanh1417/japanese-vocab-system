@@ -15,6 +15,18 @@ const createAccount = async (data) => {
   });
 };
 
+const createGoogleAccount = async (full_name, email, password) => {
+  return await prisma.accounts.create({
+    data: {
+      full_name,
+      email,
+      password,
+      role: "learner",
+      status: "active",
+    },
+  });
+};
+
 const findAllAccounts = async () => {
   return await prisma.accounts.findMany({
     select: {
@@ -102,6 +114,7 @@ const deleteAccount = async (account_id) => {
 module.exports = {
   findByEmail,
   createAccount,
+  createGoogleAccount,
   findAllAccounts,
   findAccountById,
   searchAccounts,
