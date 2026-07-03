@@ -14,6 +14,7 @@ import {
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
 import SuccessMessage from "../../../components/common/SuccessMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 import styles from "./StudyGoalPage.module.css";
 
@@ -31,6 +32,11 @@ function StudyGoalPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+    const openConfirm = (title, message, onConfirm, variant = "danger") =>
+      setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+    const closeConfirm = () => setConfirmModal({ isOpen: false });
 
     const today = new Date().toISOString().slice(0, 10);
 
@@ -124,23 +130,27 @@ function StudyGoalPage() {
         }
     };
 
-    const handleDelete = async (goalId) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xoá mục tiêu này không?")) return;
-
-        try {
-            setError("");
-            setSuccess("");
-            await deleteStudyGoalApi(goalId);
-            setSuccess("Xoá mục tiêu học tập thành công");
-
-            if (selectedGoal?.goal_id === goalId) {
-                setSelectedGoal(null);
-                setDailyPlan([]);
+    const handleDelete = (goalId) => {
+        openConfirm(
+            "Xoá mục tiêu học tập",
+            "Bạn có chắc chắn muốn xoá mục tiêu này không?",
+            async () => {
+                closeConfirm();
+                try {
+                    setError("");
+                    setSuccess("");
+                    await deleteStudyGoalApi(goalId);
+                    setSuccess("Xoá mục tiêu học tập thành công");
+                    if (selectedGoal?.goal_id === goalId) {
+                        setSelectedGoal(null);
+                        setDailyPlan([]);
+                    }
+                    fetchGoals();
+                } catch (error) {
+                    setError(error.response?.data?.message || "Xoá mục tiêu thất bại");
+                }
             }
-            fetchGoals();
-        } catch (error) {
-            setError(error.response?.data?.message || "Xoá mục tiêu thất bại");
-        }
+        );
     };
 
     const handleViewPlan = async (goal) => {
@@ -173,6 +183,7 @@ function StudyGoalPage() {
     };
 
     return (
+        <>
         <MainLayout>
             <div className={styles.headerArea}>
                 <div>
@@ -387,6 +398,18 @@ function StudyGoalPage() {
                 </div>
             )}
         </MainLayout>
+
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xoá"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
     );
 }
 

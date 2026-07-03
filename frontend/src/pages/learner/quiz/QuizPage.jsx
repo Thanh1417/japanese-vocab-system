@@ -19,6 +19,8 @@ import { getRecommendationsApi } from "../../../api/recommendationApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
+import Toast from "../../../components/common/Toast";
 
 import styles from "./QuizPage.module.css";
 
@@ -72,6 +74,19 @@ function QuizPage() {
   const [error, setError] = useState("");
 
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
+
+  // Popup xác nhận (thay window.confirm)
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", variant: "danger", onConfirm: null });
+
+  // Toast thông báo (thay alert)
+  const [toast, setToast] = useState({ isOpen: false, message: "", variant: "info" });
+
+  const showToast = (message, variant = "info") => setToast({ isOpen: true, message, variant });
+  const closeToast = () => setToast((prev) => ({ ...prev, isOpen: false }));
+
+  const openConfirm = (title, message, onConfirm, variant = "warning") =>
+    setConfirmModal({ isOpen: true, title, message, variant, onConfirm });
+  const closeConfirm = () => setConfirmModal((prev) => ({ ...prev, isOpen: false, onConfirm: null }));
 
   const sessionIdRef = useRef(null);
   const currentIndexRef = useRef(0);
@@ -292,7 +307,7 @@ function QuizPage() {
       }
       window.speechSynthesis.speak(utterance);
     } else {
-      alert("Trình duyệt không hỗ trợ phát âm.");
+      showToast("Trình duyệt không hỗ trợ phát âm.", "warning");
     }
   };
 
@@ -420,15 +435,22 @@ function QuizPage() {
     }
   };
 
-  const handleFinishEarly = async () => {
-    if (!window.confirm("Bạn có chắc chắn muốn kết thúc bài học không?")) return;
-    if (sessionId) {
-      await endStudySessionApi(sessionId, {
-        total_questions: quizMode === 'flashcard' || !hasAnswered ? currentIndex : currentIndex + 1,
-        correct_answers: score,
-      });
-    }
-    setShowResult(true);
+  const handleFinishEarly = () => {
+    openConfirm(
+      "Kết thúc bài học",
+      "Bạn có chắc chắn muốn kết thúc bài học không? Tiến độ hiện tại sẽ được lưu lại.",
+      async () => {
+        closeConfirm();
+        if (sessionId) {
+          await endStudySessionApi(sessionId, {
+            total_questions: quizMode === 'flashcard' || !hasAnswered ? currentIndex : currentIndex + 1,
+            correct_answers: score,
+          });
+        }
+        setShowResult(true);
+      },
+      "warning"
+    );
   };
 
   // Nâng cấp: Tô màu chính xác dựa trên hàm checkAnswer
@@ -452,6 +474,7 @@ function QuizPage() {
   const showSetupCard = !isGoalDayMode && !isRecommendationMode;
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <h1 className={styles.title}>Học từ vựng và luyện tập</h1>
@@ -588,7 +611,22 @@ function QuizPage() {
 
           {quizMode !== "flashcard" && (
             <>
-              <h2 className={styles.questionText}>{currentItem.content}</h2>
+              <div className={styles.questionBlock}>
+                <p className={styles.questionLabel}>
+                  {currentItem.content.replace(/：.*|:.*/, "").trim()}
+                </p>
+                <div className={styles.questionKanjiWrapper}>
+                  {currentItem.vocabulary?.reading && (
+                    <span className={styles.questionReading}>
+                      {currentItem.vocabulary.reading}
+                    </span>
+                  )}
+                  <span className={styles.questionKanji}>
+                    {currentItem.content.replace(/.*[：:]\s*/, "").trim()}
+                  </span>
+                </div>
+              </div>
+
 
               {quizMode === "typing" && (
                 <div className={styles.typingArea}>
@@ -645,6 +683,25 @@ function QuizPage() {
         </div>
       )}
     </MainLayout>
+
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xác nhận"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+
+    <Toast
+      isOpen={toast.isOpen}
+      message={toast.message}
+      variant={toast.variant}
+      onClose={closeToast}
+    />
+  </>
   );
 }
 

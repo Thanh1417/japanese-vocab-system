@@ -10,6 +10,7 @@ import { getRecommendationsApi } from "../../../api/recommendationApi";
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 import styles from "./FlashcardPage.module.css";
 
@@ -49,6 +50,11 @@ function FlashcardPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+  const openConfirm = (title, message, onConfirm, variant = "warning") =>
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmModal({ isOpen: false });
 
   const jlptOrder = {
     N5: 1,
@@ -191,11 +197,12 @@ function FlashcardPage() {
   };
 
   const handleFinish = () => {
-    if (!window.confirm("Bạn có chắc muốn kết thúc phiên flashcard này không?")) {
-      return;
-    }
-
-    setIsFinished(true);
+    openConfirm(
+      "Kết thúc phiên flashcard",
+      "Bạn có chắc muốn kết thúc phiên flashcard này không?",
+      () => { closeConfirm(); setIsFinished(true); },
+      "warning"
+    );
   };
 
   const handleReview = async (rating) => {
@@ -233,6 +240,7 @@ function FlashcardPage() {
   };
 
   return (
+    <>
     <MainLayout>
       <h1 className={styles.title}>Flashcard</h1>
 
@@ -387,6 +395,18 @@ function FlashcardPage() {
         </>
       )}
     </MainLayout>
+
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xác nhận"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+  </>
   );
 }
 

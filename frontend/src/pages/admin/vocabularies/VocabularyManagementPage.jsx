@@ -15,6 +15,8 @@ import { getAllLessonsApi } from "../../../api/lessonApi";
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
 import SuccessMessage from "../../../components/common/SuccessMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
+import Toast from "../../../components/common/Toast";
 
 import styles from "./VocabularyManagementPage.module.css";
 
@@ -36,6 +38,15 @@ function VocabularyManagementPage() {
   // Trạng thái Modal (Popup)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+  const openConfirm = (title, message, onConfirm, variant = 'danger') =>
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmModal({ isOpen: false });
+
+  const [toast, setToast] = useState({ isOpen: false, message: '', variant: 'info' });
+  const showToast = (message, variant = 'info') => setToast({ isOpen: true, message, variant });
+  const closeToast = () => setToast(prev => ({ ...prev, isOpen: false }));
 
   // Trạng thái Autocomplete cho Từ vựng
   const [suggestions, setSuggestions] = useState([]);
@@ -240,17 +251,24 @@ function VocabularyManagementPage() {
     }
   };
 
-  const handleDelete = async (vocabularyId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xoá từ vựng này không?")) return;
-    try {
-      setError("");
-      setSuccess("");
-      await deleteVocabularyApi(vocabularyId);
-      setSuccess("Xoá từ vựng thành công");
-      fetchData();
-    } catch (error) {
-      setError(error.response?.data?.message || "Xoá từ vựng thất bại");
-    }
+  const handleDelete = (vocabularyId) => {
+    openConfirm(
+      "Xoá từ vựng",
+      "Bạn có chắc chắn muốn xoá từ vựng này không?",
+      async () => {
+        closeConfirm();
+        try {
+          setError("");
+          setSuccess("");
+          await deleteVocabularyApi(vocabularyId);
+          setSuccess("Xoá từ vựng thành công");
+          fetchData();
+        } catch (error) {
+          setError(error.response?.data?.message || "Xoá từ vựng thất bại");
+        }
+      },
+      'danger'
+    );
   };
 
   // Xử lý upload và phân tích file Excel
@@ -322,11 +340,12 @@ function VocabularyManagementPage() {
 
       window.speechSynthesis.speak(utterance);
     } else {
-      alert("Trình duyệt không hỗ trợ phát âm.");
+      showToast("Trình duyệt không hỗ trợ phát âm.", "warning");
     }
   };
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <h1 className={styles.title}>Quản lý từ vựng</h1>
@@ -562,6 +581,23 @@ function VocabularyManagementPage() {
         </div>
       )}
     </MainLayout>
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xoá"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+    <Toast
+      isOpen={toast.isOpen}
+      message={toast.message}
+      variant={toast.variant}
+      onClose={closeToast}
+    />
+    </>
   );
 }
 

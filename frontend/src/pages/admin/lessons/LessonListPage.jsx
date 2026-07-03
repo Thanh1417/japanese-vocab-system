@@ -11,6 +11,7 @@ import {
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
 import SuccessMessage from "../../../components/common/SuccessMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 import styles from "./LessonListPage.module.css";
 
@@ -27,6 +28,11 @@ function LessonListPage() {
   // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15; // Hiển thị 15 bài học mỗi trang
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+  const openConfirm = (title, message, onConfirm, variant = 'danger') =>
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmModal({ isOpen: false });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLessonId, setEditingLessonId] = useState(null);
@@ -120,27 +126,33 @@ function LessonListPage() {
     }
   };
 
-  const handleDeleteLesson = async (lessonId) => {
-    if (!window.confirm("CẢNH BÁO: Xoá bài học sẽ xoá toàn bộ từ vựng bên trong. Bạn chắc chắn chứ?")) {
-      return;
-    }
-    try {
-      setError("");
-      setSuccess("");
-      await deleteLessonApi(lessonId);
-      setSuccess("Xoá bài học thành công");
-      
-      // Nếu xóa hết data ở trang cuối, tự động lùi về trang trước
-      if (paginatedLessons.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      }
-      fetchLessons();
-    } catch (error) {
-      setError(error.response?.data?.message || "Xoá bài học thất bại");
-    }
+  const handleDeleteLesson = (lessonId) => {
+    openConfirm(
+      "Xoá bài học",
+      "CẢNH BÁO: Xoá bài học sẽ xoá toàn bộ từ vựng bên trong. Bạn chắc chắn chứ?",
+      async () => {
+        closeConfirm();
+        try {
+          setError("");
+          setSuccess("");
+          await deleteLessonApi(lessonId);
+          setSuccess("Xoá bài học thành công");
+
+          // Nếu xóa hết data ở trang cuối, tự động lùi về trang trước
+          if (paginatedLessons.length === 1 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+          }
+          fetchLessons();
+        } catch (error) {
+          setError(error.response?.data?.message || "Xoá bài học thất bại");
+        }
+      },
+      'danger'
+    );
   };
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <div>
@@ -310,6 +322,17 @@ function LessonListPage() {
         </div>
       )}
     </MainLayout>
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xoá bài học"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
   );
 }
 

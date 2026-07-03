@@ -10,6 +10,7 @@ import {
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
 import SuccessMessage from "../../../components/common/SuccessMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 import styles from "./AccountManagementPage.module.css";
 
@@ -26,6 +27,11 @@ function AccountManagementPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+  const openConfirm = (title, message, onConfirm, variant = 'danger') =>
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmModal({ isOpen: false });
 
   const fetchAccounts = async () => {
     try {
@@ -65,16 +71,23 @@ function AccountManagementPage() {
     }
   };
 
-  const handleDelete = async (accountId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xoá tài khoản này không? Mọi dữ liệu học tập của họ sẽ bị mất!")) return;
-    try {
-      setError(""); setSuccess("");
-      await deleteAccountApi(accountId);
-      setSuccess("Xoá tài khoản thành công");
-      fetchAccounts();
-    } catch (error) {
-      setError(error.response?.data?.message || "Xoá tài khoản thất bại");
-    }
+  const handleDelete = (accountId) => {
+    openConfirm(
+      "Xoá tài khoản",
+      "Bạn có chắc chắn muốn xoá tài khoản này không? Mọi dữ liệu học tập của họ sẽ bị mất!",
+      async () => {
+        closeConfirm();
+        try {
+          setError(""); setSuccess("");
+          await deleteAccountApi(accountId);
+          setSuccess("Xoá tài khoản thành công");
+          fetchAccounts();
+        } catch (error) {
+          setError(error.response?.data?.message || "Xoá tài khoản thất bại");
+        }
+      },
+      'danger'
+    );
   };
 
   // Logic lọc dữ liệu
@@ -111,6 +124,7 @@ function AccountManagementPage() {
   };
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <div>
@@ -239,6 +253,17 @@ function AccountManagementPage() {
         </>
       )}
     </MainLayout>
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xoá tài khoản"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
   );
 }
 

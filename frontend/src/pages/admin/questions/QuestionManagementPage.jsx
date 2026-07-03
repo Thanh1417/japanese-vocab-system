@@ -14,6 +14,7 @@ import { getAllLessonsApi } from "../../../api/lessonApi";
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
 import SuccessMessage from "../../../components/common/SuccessMessage";
+import ConfirmModal from "../../../components/common/ConfirmModal";
 
 import styles from "./QuestionManagementPage.module.css";
 
@@ -37,6 +38,11 @@ function QuestionManagementPage() {
   const [isAutoModalOpen, setIsAutoModalOpen] = useState(false);
   const [selectedLessonForAuto, setSelectedLessonForAuto] = useState("");
   const [autoGenerateType, setAutoGenerateType] = useState("both");
+
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false });
+  const openConfirm = (title, message, onConfirm, variant = 'danger') =>
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  const closeConfirm = () => setConfirmModal({ isOpen: false });
 
   // State quản lý việc hiển thị dropdown nào đang mở ('vocab', 'w1', 'w2', 'w3')
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -230,16 +236,23 @@ function QuestionManagementPage() {
     }
   };
 
-  const handleDelete = async (questionId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xoá?")) return;
-    try {
-      setError(""); setSuccess("");
-      await deleteQuestionApi(questionId);
-      setSuccess("Xoá câu hỏi thành công");
-      fetchData();
-    } catch (error) {
-      setError(error.response?.data?.message || "Xoá câu hỏi thất bại");
-    }
+  const handleDelete = (questionId) => {
+    openConfirm(
+      "Xoá câu hỏi",
+      "Bạn có chắc chắn muốn xoá câu hỏi này không?",
+      async () => {
+        closeConfirm();
+        try {
+          setError(""); setSuccess("");
+          await deleteQuestionApi(questionId);
+          setSuccess("Xoá câu hỏi thành công");
+          fetchData();
+        } catch (error) {
+          setError(error.response?.data?.message || "Xoá câu hỏi thất bại");
+        }
+      },
+      'danger'
+    );
   };
 
   const handleAutoGenerate = async () => {
@@ -261,6 +274,7 @@ function QuestionManagementPage() {
   };
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <div>
@@ -552,6 +566,17 @@ function QuestionManagementPage() {
         </div>
       )}
     </MainLayout>
+    <ConfirmModal
+      isOpen={confirmModal.isOpen}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      variant={confirmModal.variant}
+      confirmText="Xoá"
+      cancelText="Huỷ"
+      onConfirm={confirmModal.onConfirm}
+      onCancel={closeConfirm}
+    />
+    </>
   );
 }
 

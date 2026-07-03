@@ -7,6 +7,7 @@ import {
 
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import Toast from "../../../components/common/Toast";
 
 import styles from "./FavoriteListPage.module.css";
 
@@ -16,6 +17,10 @@ function FavoriteListPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [toast, setToast] = useState({ isOpen: false, message: "", variant: "info" });
+  const showToast = (message, variant = "info") => setToast({ isOpen: true, message, variant });
+  const closeToast = () => setToast(prev => ({ ...prev, isOpen: false }));
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -110,7 +115,7 @@ function FavoriteListPage() {
       }
       window.speechSynthesis.speak(utterance);
     } else {
-      alert("Trình duyệt không hỗ trợ phát âm");
+      showToast("Trình duyệt không hỗ trợ phát âm", "warning");
     }
   };
 
@@ -120,6 +125,7 @@ function FavoriteListPage() {
   };
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <h1 className={styles.title}>Từ vựng yêu thích</h1>
@@ -309,6 +315,14 @@ function FavoriteListPage() {
         </div>
       )}
     </MainLayout>
+
+    <Toast
+      isOpen={toast.isOpen}
+      message={toast.message}
+      variant={toast.variant}
+      onClose={closeToast}
+    />
+  </>
   );
 }
 

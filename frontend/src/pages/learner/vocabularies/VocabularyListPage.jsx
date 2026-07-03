@@ -11,6 +11,7 @@ import {
 import VocabularyCard from "../../../components/vocabulary/VocabularyCard";
 import LoadingMessage from "../../../components/common/LoadingMessage";
 import ErrorMessage from "../../../components/common/ErrorMessage";
+import Toast from "../../../components/common/Toast";
 
 import styles from "./VocabularyListPage.module.css";
 
@@ -20,6 +21,10 @@ function VocabularyListPage() {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [toast, setToast] = useState({ isOpen: false, message: "", variant: "info" });
+  const showToast = (message, variant = "info") => setToast({ isOpen: true, message, variant });
+  const closeToast = () => setToast(prev => ({ ...prev, isOpen: false }));
 
   const [keyword, setKeyword] = useState("");
   const [jlptLevel, setJlptLevel] = useState("");
@@ -100,7 +105,7 @@ function VocabularyListPage() {
       }
       window.speechSynthesis.speak(utterance);
     } else {
-      alert("Trình duyệt không hỗ trợ phát âm");
+      showToast("Trình duyệt không hỗ trợ phát âm", "warning");
     }
   };
 
@@ -148,6 +153,7 @@ function VocabularyListPage() {
   );
 
   return (
+    <>
     <MainLayout>
       <div className={styles.headerArea}>
         <div>
@@ -324,6 +330,14 @@ function VocabularyListPage() {
         </>
       )}
     </MainLayout>
+
+    <Toast
+      isOpen={toast.isOpen}
+      message={toast.message}
+      variant={toast.variant}
+      onClose={closeToast}
+    />
+  </>
   );
 }
 
