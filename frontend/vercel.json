@@ -3,6 +3,10 @@
     {
       "source": "/backend-api/:path*",
       "destination": "http://168.144.137.25:5000/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
