@@ -75,6 +75,9 @@ function QuizPage() {
 
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
 
+  // Lưu thống kê phiên học trả về từ API
+  const [sessionSummary, setSessionSummary] = useState(null);
+
   // Popup xác nhận (thay window.confirm)
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: "", message: "", variant: "danger", onConfirm: null });
 
@@ -272,10 +275,11 @@ function QuizPage() {
     setTimeout(async () => {
       if (currentIndex >= studyList.length - 1) {
         if (sessionId) {
-          await endStudySessionApi(sessionId, {
+          const res = await endStudySessionApi(sessionId, {
             total_questions: studyList.length,
             correct_answers: score + (isCorrect ? 1 : 0),
           });
+          setSessionSummary(res.data.data || res.data);
         }
         setShowResult(true);
         setIsAnimating(false);
@@ -406,7 +410,8 @@ function QuizPage() {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= studyList.length) {
       if (sessionId) {
-        await endStudySessionApi(sessionId, { total_questions: studyList.length, correct_answers: score });
+        const res = await endStudySessionApi(sessionId, { total_questions: studyList.length, correct_answers: score });
+        setSessionSummary(res.data.data || res.data);
       }
       setShowResult(true);
       return;
@@ -427,6 +432,7 @@ function QuizPage() {
     setStudyList([]);
     setSessionId(null);
     setHasAutoStarted(false);
+    setSessionSummary(null);
 
     if (isRecommendationMode) {
       navigate("/recommendations");
@@ -442,10 +448,11 @@ function QuizPage() {
       async () => {
         closeConfirm();
         if (sessionId) {
-          await endStudySessionApi(sessionId, {
+          const res = await endStudySessionApi(sessionId, {
             total_questions: quizMode === 'flashcard' || !hasAnswered ? currentIndex : currentIndex + 1,
             correct_answers: score,
           });
+          setSessionSummary(res.data.data || res.data);
         }
         setShowResult(true);
       },
@@ -537,9 +544,9 @@ function QuizPage() {
           <h2 className={styles.resultTitle}>Hoàn thành!</h2>
           <p className={styles.resultScore}>
             {quizMode === 'flashcard' ? (
-              <>Tổng số thẻ đã lật: <span>{studyList.length}</span></>
+              <>Tổng số thẻ đã lật: <span>{sessionSummary?.total_questions ?? currentIndex}</span></>
             ) : (
-              <>Điểm số: <span>{score}</span> / {studyList.length}</>
+              <>Điểm số: <span>{sessionSummary?.correct_answers ?? score}</span> / {sessionSummary?.total_questions ?? studyList.length}</>
             )}
           </p>
 
