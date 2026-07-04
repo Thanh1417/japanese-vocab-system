@@ -75,6 +75,8 @@ function QuizPage() {
 
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
 
+  const [showGuide, setShowGuide] = useState(false);
+
   // Lưu thống kê phiên học trả về từ API
   const [sessionSummary, setSessionSummary] = useState(null);
 
@@ -213,12 +215,18 @@ function QuizPage() {
     return [...question.options].sort(() => Math.random() - 0.5);
   };
 
-  const handleStartStudy = async () => {
+  // Đổi tham số đầu vào để nhận biết khi nào đã skip qua màn hướng dẫn
+  const handleStartStudy = async (skipGuide = false) => {
     if (currentStudyList.length === 0) {
       setError(`Chưa có dữ liệu cho nội dung này. Vui lòng chọn bài khác!`);
       return;
     }
 
+    // LUÔN HIỂN THỊ HƯỚNG DẪN MỖI KHI BẮT ĐẦU FLASHCARD
+    if (quizMode === "flashcard" && skipGuide !== true) {
+      setShowGuide(true);
+      return; // Dừng lại để user đọc hướng dẫn
+    }
     try {
       setError("");
       const sessionRes = await startStudySessionApi({ session_type: quizMode });
@@ -259,6 +267,22 @@ function QuizPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, isStarted, hasAutoStarted, isRecommendationMode, isGoalDayMode, currentStudyList.length]);
 
+  const handleAcknowledgeGuide = () => {
+    setShowGuide(false);
+    handleStartStudy(true);
+  };
+
+  const handleCloseGuide = () => {
+    setShowGuide(false);
+    setHasAutoStarted(false); // Reset lại trạng thái auto-start
+
+    if (isRecommendationMode) {
+      navigate("/recommendations");
+    } else if (isGoalDayMode) {
+      navigate(-1);
+    }
+  };
+
   const handleReviewSrs = async (rating) => {
     if (!currentItem || isAnimating) return;
     setIsAnimating(true);
@@ -269,6 +293,16 @@ function QuizPage() {
     setAnimatingClass(styles.swipeOut);
     submitSrsReviewApi({ vocabulary_id: currentItem.vocabulary_id, is_correct: isCorrect })
       .catch((err) => console.log("Lỗi cập nhật tiến độ", err));
+
+    // Gọi API lưu lịch sử bảng cho Flashcard
+    if (sessionId) {
+      createQuestionResultApi({
+        session_id: sessionId,
+        vocabulary_id: currentItem.vocabulary_id,
+        rating: rating,
+        is_correct: isCorrect
+      }).catch((err) => console.log("Lỗi lưu lịch sử", err));
+    }
 
     setReviewStats((prev) => ({ ...prev, [rating]: prev[rating] + 1 }));
 
@@ -376,6 +410,7 @@ function QuizPage() {
       session_id: sessionId,
       question_id: currentItem.question_id,
       user_answer: answer,
+      rating: rating
     });
 
     if (isCorrect) setScore(score + 1);
@@ -399,10 +434,10 @@ function QuizPage() {
     if (hasAnswered) return;
     setError("");
     setSelectedAnswer(option);
-    
+
     // So sánh trực tiếp chuỗi gốc thay vì dùng hàm checkAnswer cắt gọt
     const isCorrect = option.trim() === currentItem.correct_answer.trim();
-    
+
     await saveAnswer(option, isCorrect);
   };
 
@@ -482,233 +517,270 @@ function QuizPage() {
 
   return (
     <>
-    <MainLayout>
-      <div className={styles.headerArea}>
-        <h1 className={styles.title}>Học từ vựng và luyện tập</h1>
-      </div>
-
-      <ErrorMessage message={error} />
-
-      {(loading || (!isStarted && !showSetupCard && !error)) && (
-        <LoadingMessage text="Đang chuẩn bị bài học..." />
-      )}
-
-      {!loading && !isStarted && !showResult && !error && showSetupCard && (
-        <div className={styles.quizSetupCard}>
-          <h2 className={styles.setupTitle}>Lựa chọn bài học</h2>
-
-          <div className={styles.setupForm}>
-            <div className={styles.formGroup}>
-              <label>Phương pháp học</label>
-              <select className={styles.input} value={quizMode} onChange={(e) => setQuizMode(e.target.value)}>
-                <option value="flashcard">Flashcard</option>
-                <option value="multiple_choice">Trắc nghiệm</option>
-                <option value="typing">Tự luận</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Cấp độ JLPT</label>
-              <select className={styles.input} value={selectedLevel} onChange={(e) => { setSelectedLevel(e.target.value); setSelectedLessonId(""); }}>
-                <option value="">Tất cả cấp độ</option>
-                <option value="N5">N5</option>
-                <option value="N4">N4</option>
-                <option value="N3">N3</option>
-                <option value="N2">N2</option>
-                <option value="N1">N1</option>
-              </select>
-            </div>
-            <div className={styles.formGroup}>
-              <label>Bài học</label>
-              <select className={styles.input} value={selectedLessonId} onChange={(e) => setSelectedLessonId(e.target.value)}>
-                <option value="">Tất cả bài học</option>
-                {filteredLessons.map(lesson => (
-                  <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                    {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className={styles.setupFooter}>
-            <p className={styles.message}>Tìm thấy <strong style={{ color: "#3b82f6" }}>{currentStudyList.length}</strong> từ vựng / câu hỏi</p>
-            <button className={styles.startBtn} onClick={handleStartStudy}>Bắt đầu học</button>
-          </div>
+      <MainLayout>
+        <div className={styles.headerArea}>
+          <h1 className={styles.title}>Học từ vựng và luyện tập</h1>
         </div>
-      )}
 
-      {!loading && showResult && (
-        <div className={styles.resultCard}>
-          <div className={styles.resultIcon}>🏆</div>
-          <h2 className={styles.resultTitle}>Hoàn thành!</h2>
-          <p className={styles.resultScore}>
-            {quizMode === 'flashcard' ? (
-              <>Tổng số thẻ đã lật: <span>{sessionSummary?.total_questions ?? currentIndex}</span></>
-            ) : (
-              <>Điểm số: <span>{sessionSummary?.correct_answers ?? score}</span> / {sessionSummary?.total_questions ?? studyList.length}</>
-            )}
-          </p>
+        <ErrorMessage message={error} />
 
-          {quizMode === 'flashcard' && (
-            <div className={styles.statsGrid}>
-              <div className={styles.statAgain}>Lại: {reviewStats.again}</div>
-              <div className={styles.statHard}>Khó: {reviewStats.hard}</div>
-              <div className={styles.statGood}>Được: {reviewStats.good}</div>
-              <div className={styles.statEasy}>Dễ: {reviewStats.easy}</div>
-            </div>
-          )}
+        {(loading || (!isStarted && !showSetupCard && !error)) && (
+          <LoadingMessage text="Đang chuẩn bị bài học..." />
+        )}
 
-          <button className={styles.startBtn} onClick={handleBackToSetup}>
-            {isRecommendationMode || isGoalDayMode ? "Quay lại danh sách" : "Chọn bài khác"}
-          </button>
-        </div>
-      )}
+        {!loading && !isStarted && !showResult && !error && showSetupCard && (
+          <div className={styles.quizSetupCard}>
+            <h2 className={styles.setupTitle}>Lựa chọn bài học</h2>
 
-      {!loading && isStarted && !showResult && currentItem && (
-        <div className={styles.quizActiveCard}>
-          <div className={styles.quizHeader}>
-            <span className={styles.progressText}>Tiến độ: {currentIndex + 1} / {studyList.length}</span>
-            {quizMode !== 'flashcard' && <span className={styles.scoreText}>Điểm: {score}</span>}
-          </div>
-
-          <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${(currentIndex / studyList.length) * 100}%` }}></div>
-          </div>
-
-          {quizMode === "flashcard" && (
-            <div className={styles.flashcardContainer}>
-              <div className={`${styles.flashcardWrapper} ${animatingClass}`}>
-
-                <div
-                  className={`${styles.card} ${isFlipped ? styles.flipped : ""} ${isAnimating ? styles.instant : ""}`}
-                  onClick={() => { if (!isAnimating) setIsFlipped(!isFlipped) }}
-                >
-                  <div className={`${styles.cardFace} ${styles.cardFront}`}>
-                    <h2 className={styles.wordText}>{currentItem.word}</h2>
-                    <span className={styles.flipHint}>Click để lật thẻ</span>
-                  </div>
-
-                  <div className={`${styles.cardFace} ${styles.cardBack}`}>
-                    <h2 className={styles.readingText}>{currentItem.reading || " "}</h2>
-                    <h2 className={styles.meaningText}>{currentItem.vietnamese_meaning}</h2>
-                    <p className={styles.kanjiText}>Âm Hán: {currentItem.kanji_meaning || "-"}</p>
-
-                    <button
-                      type="button"
-                      className={styles.playAudioBtnFlashcard}
-                      onClick={(e) => { e.stopPropagation(); playAudio(currentItem.reading || currentItem.word); }}
-                    >
-                      ▶
-                    </button>
-                  </div>
-                </div>
-
-                <div className={`${styles.reviewActions} ${!isFlipped ? styles.hidden : ""}`}>
-                  <button className={`${styles.reviewButton} ${styles.againButton}`} onClick={() => handleReviewSrs("again")}>Quên</button>
-                  <button className={`${styles.reviewButton} ${styles.hardButton}`} onClick={() => handleReviewSrs("hard")}>Khó</button>
-                  <button className={`${styles.reviewButton} ${styles.goodButton}`} onClick={() => handleReviewSrs("good")}>Được</button>
-                  <button className={`${styles.reviewButton} ${styles.easyButton}`} onClick={() => handleReviewSrs("easy")}>Rất Dễ</button>
-                </div>
-
-                {!isFlipped && <button className={styles.showAnswerBtn} onClick={() => setIsFlipped(true)}>Xem đáp án</button>}
-              </div>
-            </div>
-          )}
-
-          {quizMode !== "flashcard" && (
-            <>
-              <div className={styles.questionBlock}>
-                <p className={styles.questionLabel}>
-                  {currentItem.content.replace(/：.*|:.*/, "").trim()}
-                </p>
-                <div className={styles.questionKanjiWrapper}>
-                  {currentItem.vocabulary?.reading && (
-                    <span className={styles.questionReading}>
-                      {currentItem.vocabulary.reading}
-                    </span>
-                  )}
-                  <span className={styles.questionKanji}>
-                    {currentItem.content.replace(/.*[：:]\s*/, "").trim()}
-                  </span>
-                </div>
+            <div className={styles.setupForm}>
+              <div className={styles.formGroup}>
+                <label>Phương pháp học</label>
+                <select className={styles.input} value={quizMode} onChange={(e) => setQuizMode(e.target.value)}>
+                  <option value="flashcard">Flashcard</option>
+                  <option value="multiple_choice">Trắc nghiệm</option>
+                  <option value="typing">Tự luận</option>
+                </select>
               </div>
 
-
-              {quizMode === "typing" && (
-                <div className={styles.typingArea}>
-                  <input
-                    className={styles.typingInput}
-                    value={selectedAnswer}
-                    onChange={(e) => setSelectedAnswer(e.target.value)}
-                    placeholder="Nhập đáp án của bạn vào đây..."
-                    disabled={hasAnswered} autoFocus
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !hasAnswered) handleSubmitQuizAnswer(); }}
-                  />
-                </div>
-              )}
-
-              {quizMode === "multiple_choice" && (
-                <div className={styles.optionGrid}>
-                  {currentOptions.map((option, index) => (
-                    <button key={index} className={getOptionClassName(option)} onClick={() => handleSelectOption(option)} disabled={hasAnswered}>
-                      <span className={styles.optionLetter}>{String.fromCharCode(65 + index)}</span>
-                      <span className={styles.optionText}>{option}</span>
-                    </button>
+              <div className={styles.formGroup}>
+                <label>Cấp độ JLPT</label>
+                <select className={styles.input} value={selectedLevel} onChange={(e) => { setSelectedLevel(e.target.value); setSelectedLessonId(""); }}>
+                  <option value="">Tất cả cấp độ</option>
+                  <option value="N5">N5</option>
+                  <option value="N4">N4</option>
+                  <option value="N3">N3</option>
+                  <option value="N2">N2</option>
+                  <option value="N1">N1</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Bài học</label>
+                <select className={styles.input} value={selectedLessonId} onChange={(e) => setSelectedLessonId(e.target.value)}>
+                  <option value="">Tất cả bài học</option>
+                  {filteredLessons.map(lesson => (
+                    <option key={lesson.lesson_id} value={lesson.lesson_id}>
+                      {formatLessonName(lesson.lesson_name)} - {lesson.jlpt_level}
+                    </option>
                   ))}
-                </div>
-              )}
-
-              {/* Chỉ hiển thị feedbackArea khi đang làm bài Tự luận (typing) */}
-              {quizMode === "typing" && (
-                <div className={styles.feedbackArea}>
-                  {answerResult === true &&
-                    <div className={styles.feedbackCorrect}>
-                      Chính xác! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
-                    </div>
-                  }
-                  {answerResult === false && (
-                    <div className={styles.feedbackWrong}>
-                      Sai rồi! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className={styles.quizActions}>
-                {quizMode === "typing" && !hasAnswered && (
-                  <button className={styles.actionBtnPrimary} onClick={handleSubmitQuizAnswer}>Kiểm tra</button>
-                )}
-                {hasAnswered && <button className={styles.actionBtnNext} onClick={handleNextItem}>Tiếp tục ➔</button>}
+                </select>
               </div>
-            </>
-          )}
+            </div>
 
-          <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button className={styles.actionBtnCancel} onClick={handleFinishEarly}>Thoát phiên học</button>
+            <div className={styles.setupFooter}>
+              <p className={styles.message}>Tìm thấy <strong style={{ color: "#3b82f6" }}>{currentStudyList.length}</strong> từ vựng / câu hỏi</p>
+              <button className={styles.startBtn} onClick={handleStartStudy}>Bắt đầu học</button>
+            </div>
           </div>
-        </div>
-      )}
-    </MainLayout>
+        )}
 
-    <ConfirmModal
-      isOpen={confirmModal.isOpen}
-      title={confirmModal.title}
-      message={confirmModal.message}
-      variant={confirmModal.variant}
-      confirmText="Xác nhận"
-      cancelText="Huỷ"
-      onConfirm={confirmModal.onConfirm}
-      onCancel={closeConfirm}
-    />
+        {!loading && showResult && (
+          <div className={styles.resultCard}>
+            <div className={styles.resultIcon}>🏆</div>
+            <h2 className={styles.resultTitle}>Hoàn thành!</h2>
+            <p className={styles.resultScore}>
+              {quizMode === 'flashcard' ? (
+                <>Tổng số thẻ đã lật: <span>{sessionSummary?.total_questions ?? currentIndex}</span></>
+              ) : (
+                <>Điểm số: <span>{sessionSummary?.correct_answers ?? score}</span> / {sessionSummary?.total_questions ?? studyList.length}</>
+              )}
+            </p>
 
-    <Toast
-      isOpen={toast.isOpen}
-      message={toast.message}
-      variant={toast.variant}
-      onClose={closeToast}
-    />
-  </>
+            {quizMode === 'flashcard' && (
+              <div className={styles.statsGrid}>
+                <div className={styles.statAgain}>Lại: {reviewStats.again}</div>
+                <div className={styles.statHard}>Khó: {reviewStats.hard}</div>
+                <div className={styles.statGood}>Được: {reviewStats.good}</div>
+                <div className={styles.statEasy}>Dễ: {reviewStats.easy}</div>
+              </div>
+            )}
+
+            <button className={styles.startBtn} onClick={handleBackToSetup}>
+              {isRecommendationMode || isGoalDayMode ? "Quay lại danh sách" : "Chọn bài khác"}
+            </button>
+          </div>
+        )}
+
+        {!loading && isStarted && !showResult && currentItem && (
+          <div className={styles.quizActiveCard}>
+            <div className={styles.quizHeader}>
+              <span className={styles.progressText}>Tiến độ: {currentIndex + 1} / {studyList.length}</span>
+              {quizMode !== 'flashcard' && <span className={styles.scoreText}>Điểm: {score}</span>}
+            </div>
+
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: `${(currentIndex / studyList.length) * 100}%` }}></div>
+            </div>
+
+            {quizMode === "flashcard" && (
+              <div className={styles.flashcardContainer}>
+                <div className={`${styles.flashcardWrapper} ${animatingClass}`}>
+
+                  <div
+                    className={`${styles.card} ${isFlipped ? styles.flipped : ""} ${isAnimating ? styles.instant : ""}`}
+                    onClick={() => { if (!isAnimating) setIsFlipped(!isFlipped) }}
+                  >
+                    <div className={`${styles.cardFace} ${styles.cardFront}`}>
+                      <h2 className={styles.wordText}>{currentItem.word}</h2>
+                      <span className={styles.flipHint}>Click để lật thẻ</span>
+                    </div>
+
+                    <div className={`${styles.cardFace} ${styles.cardBack}`}>
+                      <h2 className={styles.readingText}>{currentItem.reading || " "}</h2>
+                      <h2 className={styles.meaningText}>{currentItem.vietnamese_meaning}</h2>
+                      <p className={styles.kanjiText}>Âm Hán: {currentItem.kanji_meaning || "-"}</p>
+
+                      <button
+                        type="button"
+                        className={styles.playAudioBtnFlashcard}
+                        onClick={(e) => { e.stopPropagation(); playAudio(currentItem.reading || currentItem.word); }}
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`${styles.reviewActions} ${!isFlipped ? styles.hidden : ""}`}>
+                    <button className={`${styles.reviewButton} ${styles.againButton}`} onClick={() => handleReviewSrs("again")}>Quên</button>
+                    <button className={`${styles.reviewButton} ${styles.hardButton}`} onClick={() => handleReviewSrs("hard")}>Khó</button>
+                    <button className={`${styles.reviewButton} ${styles.goodButton}`} onClick={() => handleReviewSrs("good")}>Được</button>
+                    <button className={`${styles.reviewButton} ${styles.easyButton}`} onClick={() => handleReviewSrs("easy")}>Rất Dễ</button>
+                  </div>
+
+                  {!isFlipped && <button className={styles.showAnswerBtn} onClick={() => setIsFlipped(true)}>Xem đáp án</button>}
+                </div>
+              </div>
+            )}
+
+            {quizMode !== "flashcard" && (
+              <>
+                <div className={styles.questionBlock}>
+                  <p className={styles.questionLabel}>
+                    {currentItem.content.replace(/：.*|:.*/, "").trim()}
+                  </p>
+                  <div className={styles.questionKanjiWrapper}>
+                    {currentItem.vocabulary?.reading && (
+                      <span className={styles.questionReading}>
+                        {currentItem.vocabulary.reading}
+                      </span>
+                    )}
+                    <span className={styles.questionKanji}>
+                      {currentItem.content.replace(/.*[：:]\s*/, "").trim()}
+                    </span>
+                  </div>
+                </div>
+
+
+                {quizMode === "typing" && (
+                  <div className={styles.typingArea}>
+                    <input
+                      className={styles.typingInput}
+                      value={selectedAnswer}
+                      onChange={(e) => setSelectedAnswer(e.target.value)}
+                      placeholder="Nhập đáp án của bạn vào đây..."
+                      disabled={hasAnswered} autoFocus
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !hasAnswered) handleSubmitQuizAnswer(); }}
+                    />
+                  </div>
+                )}
+
+                {quizMode === "multiple_choice" && (
+                  <div className={styles.optionGrid}>
+                    {currentOptions.map((option, index) => (
+                      <button key={index} className={getOptionClassName(option)} onClick={() => handleSelectOption(option)} disabled={hasAnswered}>
+                        <span className={styles.optionLetter}>{String.fromCharCode(65 + index)}</span>
+                        <span className={styles.optionText}>{option}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Chỉ hiển thị feedbackArea khi đang làm bài Tự luận (typing) */}
+                {quizMode === "typing" && (
+                  <div className={styles.feedbackArea}>
+                    {answerResult === true &&
+                      <div className={styles.feedbackCorrect}>
+                        Chính xác! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
+                      </div>
+                    }
+                    {answerResult === false && (
+                      <div className={styles.feedbackWrong}>
+                        Sai rồi! Đáp án đúng là: <strong>{currentItem.correct_answer}</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className={styles.quizActions}>
+                  {quizMode === "typing" && !hasAnswered && (
+                    <button className={styles.actionBtnPrimary} onClick={handleSubmitQuizAnswer}>Kiểm tra</button>
+                  )}
+                  {hasAnswered && <button className={styles.actionBtnNext} onClick={handleNextItem}>Tiếp tục ➔</button>}
+                </div>
+              </>
+            )}
+
+            <div style={{ textAlign: "center", marginTop: "24px" }}>
+              <button className={styles.actionBtnCancel} onClick={handleFinishEarly}>Thoát phiên học</button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL HƯỚNG DẪN FLASHCARD */}
+        {showGuide && (
+          <div className={styles.guideOverlay}>
+            <div className={styles.guideContent}>
+              <div className={styles.guideHeader}>
+                <h2>Hướng dẫn đánh giá Flashcard</h2>
+                <button className={styles.closeGuideBtn} onClick={handleCloseGuide}>&times;</button>
+              </div>
+
+              <p className={styles.guideDesc}>
+                Để hệ thống tính toán thời gian ôn tập lại tối ưu nhất, hãy tự đánh giá thật trung thực mức độ ghi nhớ của bạn sau khi xem đáp án:
+              </p>
+              <ul className={styles.guideList}>
+                <li>
+                  <span className={`${styles.guideBadge} ${styles.bgRed}`}>Quên</span>
+                  <span>Hoàn toàn không nhớ hoặc nhớ sai. Thẻ sẽ lặp lại ngay để bạn học lại.</span>
+                </li>
+                <li>
+                  <span className={`${styles.guideBadge} ${styles.bgOrange}`}>Khó</span>
+                  <span>Nhớ ra đáp án nhưng mất nhiều thời gian suy nghĩ. Thẻ sẽ sớm xuất hiện lại.</span>
+                </li>
+                <li>
+                  <span className={`${styles.guideBadge} ${styles.bgBlue}`}>Được</span>
+                  <span>Nhớ ra ngay lập tức, phản xạ bình thường. Khoảng cách ôn tập chuẩn.</span>
+                </li>
+                <li>
+                  <span className={`${styles.guideBadge} ${styles.bgGreen}`}>Rất Dễ</span>
+                  <span>Từ này đã quá quen thuộc với bạn. Sẽ rất lâu sau thẻ mới lặp lại.</span>
+                </li>
+              </ul>
+              <button className={styles.understandBtn} onClick={handleAcknowledgeGuide}>
+                Đã hiểu, bắt đầu lật thẻ
+              </button>
+            </div>
+          </div>
+        )}
+      </MainLayout>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        confirmText="Xác nhận"
+        cancelText="Huỷ"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirm}
+      />
+
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        variant={toast.variant}
+        onClose={closeToast}
+      />
+    </>
   );
 }
 

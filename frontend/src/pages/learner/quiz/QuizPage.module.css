@@ -142,7 +142,7 @@
 }
 
 /* =========================================
-   4. UI FLASHCARD (THẺ GHI NHỚ)
+   4. UI FLASHCARD
 ========================================= */
 .flashcardContainer {
   display: flex;
@@ -605,4 +605,144 @@
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* =========================================
+   7. MODAL HƯỚNG DẪN FLASHCARD
+========================================= */
+.guideOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.guideContent {
+  background: white;
+  width: 100%;
+  max-width: 550px;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.guideHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.guideHeader h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.closeGuideBtn {
+  background: transparent;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+  color: #94a3b8;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeGuideBtn:hover {
+  color: #ef4444;
+}
+
+.guideDesc {
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.guideList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guideList li {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  font-size: 15px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.guideBadge {
+  flex-shrink: 0;
+  width: 75px;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 8px;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.bgRed {
+  background: #ef4444;
+}
+
+.bgOrange {
+  background: #f59e0b;
+}
+
+.bgBlue {
+  background: #3b82f6;
+}
+
+.bgGreen {
+  background: #10b981;
+}
+
+.understandBtn {
+  width: 100%;
+  background: #10b981;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.understandBtn:hover {
+  background: #059669;
 }

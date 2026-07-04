@@ -33,7 +33,7 @@ function StudySessionDetailPage() {
   }, [sessionId]);
 
   const getSessionTypeName = (type) => {
-    if (type === 'flashcard') return 'Thẻ ghi nhớ';
+    if (type === 'flashcard') return 'Flashcard';
     if (type === 'multiple_choice') return 'Trắc nghiệm';
     if (type === 'typing') return 'Tự luận';
     return type;
@@ -42,7 +42,7 @@ function StudySessionDetailPage() {
   // Hàm tạo nhãn màu sắc cho Rating
   const renderSrsBadge = (rating) => {
     if (!rating) return <span className={styles.srsBadge}>-</span>;
-    switch(rating.toLowerCase()) {
+    switch (rating.toLowerCase()) {
       case 'again': return <span className={`${styles.srsBadge} ${styles.srsAgain}`}>Quên</span>;
       case 'hard': return <span className={`${styles.srsBadge} ${styles.srsHard}`}>Khó</span>;
       case 'good': return <span className={`${styles.srsBadge} ${styles.srsGood}`}>Được</span>;
@@ -91,24 +91,32 @@ function StudySessionDetailPage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th width="80px" style={{ textAlign: "center" }}>STT</th>
+                    <th width="60px" style={{ textAlign: "center" }}>STT</th>
                     <th>Từ vựng</th>
+                    <th>Cách đọc</th>
+                    <th>Ý nghĩa</th>
                     <th style={{ textAlign: "center" }}>Đánh giá (SRS)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {results.length > 0 ? results.map((r, index) => {
-                    // Lấy từ vựng từ quan hệ vocabulary (nếu có) hoặc từ question.vocabulary
-                    const word = r.vocabulary?.word || r.question?.vocabulary?.word || "Đang tải...";
+                    // Trích xuất an toàn toàn bộ object vocabulary
+                    const vocab = r.vocabulary || r.question?.vocabulary || {};
+                    const word = vocab.word || "Đang tải...";
+                    const reading = vocab.reading || "-";
+                    const meaning = vocab.vietnamese_meaning || "-";
+
                     return (
                       <tr key={r.result_id}>
                         <td className={styles.indexCol} style={{ textAlign: "center" }}>{index + 1}</td>
-                        <td><strong>{word}</strong></td>
+                        <td><strong style={{ fontSize: "18px", color: "#0f172a" }}>{word}</strong></td>
+                        <td style={{ color: "#3b82f6", fontWeight: "600" }}>{reading}</td>
+                        <td style={{ color: "#475569" }}>{meaning}</td>
                         <td style={{ textAlign: "center" }}>{renderSrsBadge(r.rating)}</td>
                       </tr>
                     );
                   }) : (
-                    <tr><td colSpan="3" style={{ textAlign: "center", padding: "30px" }}>Chưa có dữ liệu từ vựng cho phiên này</td></tr>
+                    <tr><td colSpan="5" style={{ textAlign: "center", padding: "30px" }}>Chưa có dữ liệu từ vựng cho phiên này</td></tr>
                   )}
                 </tbody>
               </table>

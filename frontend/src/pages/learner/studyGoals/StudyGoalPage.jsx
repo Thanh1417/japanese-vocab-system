@@ -35,7 +35,7 @@ function StudyGoalPage() {
 
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
     const openConfirm = (title, message, onConfirm, variant = "danger") =>
-      setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+        setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
     const closeConfirm = () => setConfirmModal({ isOpen: false });
 
     const today = new Date().toISOString().slice(0, 10);
@@ -184,232 +184,237 @@ function StudyGoalPage() {
 
     return (
         <>
-        <MainLayout>
-            <div className={styles.headerArea}>
-                <div>
-                    <h1 className={styles.title}>Mục tiêu học tập</h1>
-                    <p className={styles.description}>
-                        Tạo mục tiêu học từ vựng theo cấp độ JLPT
-                    </p>
-                </div>
-                <button className={styles.addButton} onClick={() => openModal()}>
-                    Tạo mục tiêu học tập
-                </button>
-            </div>
-
-            <ErrorMessage message={error} />
-            <SuccessMessage message={success} />
-
-            {isModalOpen && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <div className={styles.modalHeader}>
-                            <h2>{editingId ? "Cập nhật mục tiêu" : "Tạo mục tiêu học tập"}</h2>
-                            <button className={styles.closeModalBtn} onClick={closeModal}>&times;</button>
-                        </div>
-
-                        <form className={styles.form} onSubmit={handleSubmit}>
-                            <div className={styles.formGrid}>
-                                <div className={styles.formGroup}>
-                                    <label>Tên mục tiêu</label>
-                                    <input
-                                        name="goal_name"
-                                        value={formData.goal_name}
-                                        onChange={handleChange}
-                                        placeholder="Ví dụ: Hoàn thành N5"
-                                        className={styles.modalInput}
-                                        required
-                                    />
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Cấp độ JLPT</label>
-                                    <select name="jlpt_level" value={formData.jlpt_level} onChange={handleChange} className={styles.modalInput}>
-                                        <option value="N5">N5</option>
-                                        <option value="N4">N4</option>
-                                        <option value="N3">N3</option>
-                                        <option value="N2">N2</option>
-                                        <option value="N1">N1</option>
-                                    </select>
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Ngày bắt đầu</label>
-                                    <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} className={styles.modalInput} required />
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Ngày kết thúc</label>
-                                    <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className={styles.modalInput} required />
-                                </div>
-
-
-                            </div>
-
-                            <div className={styles.modalActions}>
-                                <button className={styles.submitButton} type="submit">
-                                    {editingId ? "Cập nhật" : "Tạo mục tiêu"}
-                                </button>
-                                <button className={styles.cancelButton} type="button" onClick={closeModal}>
-                                    Huỷ
-                                </button>
-                            </div>
-                        </form>
+            <MainLayout>
+                <div className={styles.headerArea}>
+                    <div>
+                        <h1 className={styles.title}>Mục tiêu học tập</h1>
+                        <p className={styles.description}>
+                            Tạo mục tiêu học từ vựng theo cấp độ JLPT
+                        </p>
                     </div>
+                    <button className={styles.addButton} onClick={() => openModal()}>
+                        Tạo mục tiêu học tập
+                    </button>
                 </div>
-            )}
 
-            {loading && <LoadingMessage />}
+                {!isModalOpen && <ErrorMessage message={error} />}
+                {!isModalOpen && <SuccessMessage message={success} />}
 
-            {!loading && sortedGoals.length === 0 && (
-                <p className={styles.message}>
-                    Bạn chưa có mục tiêu học tập nào. Hãy tạo mục tiêu đầu tiên.
-                </p>
-            )}
+                {isModalOpen && (
+                    <div className={styles.modalOverlay}>
+                        <div className={styles.modalContent}>
+                            <div className={styles.modalHeader}>
+                                <h2>{editingId ? "Cập nhật mục tiêu" : "Tạo mục tiêu học tập"}</h2>
+                                <button className={styles.closeModalBtn} onClick={closeModal}>&times;</button>
+                            </div>
 
-            {!loading && sortedGoals.length > 0 && (
-                <div className={styles.goalGrid}>
-                    {sortedGoals.map((goal) => {
-                        const isCompleted = goal.status === "completed";
-                        const strokeColor = isCompleted ? "#10b981" : "#0ea5e9"; // Xanh lá nếu xong, xanh dương nếu đang học
-                        const radius = 34;
-                        const circumference = 2 * Math.PI * radius; // Chu vi đường tròn
-                        const offset = circumference - (goal.progress / 100) * circumference;
+                            <div style={{ marginBottom: "16px" }}>
+                                <ErrorMessage message={error} />
+                                <SuccessMessage message={success} />
+                            </div>
 
-                        return (
-                            <div key={goal.goal_id} className={`${styles.goalCard} ${isCompleted ? styles.completedCard : ""}`}>
-                                <div className={styles.goalHeader}>
-                                    <h2>
-                                        {goal.goal_name}
-                                    </h2>
-                                    <span className={`${styles.level} ${isCompleted ? styles.levelCompleted : ""}`}>
-                                        {goal.jlpt_level}
-                                    </span>
-                                </div>
-
-                                <div className={styles.goalBody}>
-                                    <div className={styles.goalInfo}>
-                                        <p><strong>Thời gian:</strong> {formatDate(goal.start_date)} - {formatDate(goal.end_date)}</p>
-                                        <p><strong>Tiến độ từ vựng:</strong> {goal.learned_words || 0} / {goal.total_words}</p>
-                                        
+                            <form className={styles.form} onSubmit={handleSubmit}>
+                                <div className={styles.formGrid}>
+                                    <div className={styles.formGroup}>
+                                        <label>Tên mục tiêu</label>
+                                        <input
+                                            name="goal_name"
+                                            value={formData.goal_name}
+                                            onChange={handleChange}
+                                            placeholder="Ví dụ: Hoàn thành N5"
+                                            className={styles.modalInput}
+                                            required
+                                        />
                                     </div>
 
-                                    {/* SVG CIRCULAR PROGRESS BAR */}
-                                    <div className={styles.progressCircleWrapper}>
-                                        <svg width="84" height="84" className={styles.circularSvg}>
-                                            <circle cx="42" cy="42" r={radius} className={styles.bgCircle} />
-                                            <circle
-                                                cx="42" cy="42" r={radius}
-                                                className={styles.progressCircle}
-                                                style={{
-                                                    strokeDasharray: circumference,
-                                                    strokeDashoffset: offset,
-                                                    stroke: strokeColor
-                                                }}
-                                            />
-                                        </svg>
-                                        <div className={styles.progressText} style={{ color: strokeColor }}>
-                                            {goal.progress}%
+                                    <div className={styles.formGroup}>
+                                        <label>Cấp độ JLPT</label>
+                                        <select name="jlpt_level" value={formData.jlpt_level} onChange={handleChange} className={styles.modalInput}>
+                                            <option value="N5">N5</option>
+                                            <option value="N4">N4</option>
+                                            <option value="N3">N3</option>
+                                            <option value="N2">N2</option>
+                                            <option value="N1">N1</option>
+                                        </select>
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label>Ngày bắt đầu</label>
+                                        <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} className={styles.modalInput} required />
+                                    </div>
+
+                                    <div className={styles.formGroup}>
+                                        <label>Ngày kết thúc</label>
+                                        <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} className={styles.modalInput} required />
+                                    </div>
+
+
+                                </div>
+
+                                <div className={styles.modalActions}>
+                                    <button className={styles.submitButton} type="submit">
+                                        {editingId ? "Cập nhật" : "Tạo mục tiêu"}
+                                    </button>
+                                    <button className={styles.cancelButton} type="button" onClick={closeModal}>
+                                        Huỷ
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {loading && <LoadingMessage />}
+
+                {!loading && sortedGoals.length === 0 && (
+                    <p className={styles.message}>
+                        Bạn chưa có mục tiêu học tập nào. Hãy tạo mục tiêu đầu tiên.
+                    </p>
+                )}
+
+                {!loading && sortedGoals.length > 0 && (
+                    <div className={styles.goalGrid}>
+                        {sortedGoals.map((goal) => {
+                            const isCompleted = goal.status === "completed";
+                            const strokeColor = isCompleted ? "#10b981" : "#0ea5e9"; // Xanh lá nếu xong, xanh dương nếu đang học
+                            const radius = 34;
+                            const circumference = 2 * Math.PI * radius; // Chu vi đường tròn
+                            const offset = circumference - (goal.progress / 100) * circumference;
+
+                            return (
+                                <div key={goal.goal_id} className={`${styles.goalCard} ${isCompleted ? styles.completedCard : ""}`}>
+                                    <div className={styles.goalHeader}>
+                                        <h2>
+                                            {goal.goal_name}
+                                        </h2>
+                                        <span className={`${styles.level} ${isCompleted ? styles.levelCompleted : ""}`}>
+                                            {goal.jlpt_level}
+                                        </span>
+                                    </div>
+
+                                    <div className={styles.goalBody}>
+                                        <div className={styles.goalInfo}>
+                                            <p><strong>Thời gian:</strong> {formatDate(goal.start_date)} - {formatDate(goal.end_date)}</p>
+                                            <p><strong>Tiến độ từ vựng:</strong> {goal.learned_words || 0} / {goal.total_words}</p>
+
+                                        </div>
+
+                                        {/* SVG CIRCULAR PROGRESS BAR */}
+                                        <div className={styles.progressCircleWrapper}>
+                                            <svg width="84" height="84" className={styles.circularSvg}>
+                                                <circle cx="42" cy="42" r={radius} className={styles.bgCircle} />
+                                                <circle
+                                                    cx="42" cy="42" r={radius}
+                                                    className={styles.progressCircle}
+                                                    style={{
+                                                        strokeDasharray: circumference,
+                                                        strokeDashoffset: offset,
+                                                        stroke: strokeColor
+                                                    }}
+                                                />
+                                            </svg>
+                                            <div className={styles.progressText} style={{ color: strokeColor }}>
+                                                {goal.progress}%
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <div className={styles.cardActions}>
+                                        <button className={styles.viewButton} onClick={() => handleViewPlan(goal)}>Xem lộ trình</button>
+                                        <button className={styles.editButton} onClick={() => openModal(goal)}>Sửa</button>
+                                        <button className={styles.deleteButton} onClick={() => handleDelete(goal.goal_id)}>Xoá</button>
+                                    </div>
                                 </div>
+                            );
+                        })}
+                    </div>
+                )}
 
-                                <div className={styles.cardActions}>
-                                    <button className={styles.viewButton} onClick={() => handleViewPlan(goal)}>Xem lộ trình</button>
-                                    <button className={styles.editButton} onClick={() => openModal(goal)}>Sửa</button>
-                                    <button className={styles.deleteButton} onClick={() => handleDelete(goal.goal_id)}>Xoá</button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+                {selectedGoal && (
+                    <div className={styles.planSection}>
+                        <h2>Lộ trình học mỗi ngày</h2>
+                        <p className={styles.description}>
+                            Mục tiêu: <strong>{selectedGoal.goal_name}</strong> - {selectedGoal.jlpt_level}
+                        </p>
 
-            {selectedGoal && (
-                <div className={styles.planSection}>
-                    <h2>Lộ trình học mỗi ngày</h2>
-                    <p className={styles.description}>
-                        Mục tiêu: <strong>{selectedGoal.goal_name}</strong> - {selectedGoal.jlpt_level}
-                    </p>
+                        {planLoading && <LoadingMessage text="Đang tải lộ trình..." />}
 
-                    {planLoading && <LoadingMessage text="Đang tải lộ trình..." />}
+                        {!planLoading && dailyPlan.length > 0 && (
+                            <div className={styles.planGrid}>
+                                {dailyPlan.map((day) => {
+                                    const isDayCompleted = day.progress === 100;
+                                    const dayStrokeColor = isDayCompleted ? "#10b981" : "#0ea5e9";
+                                    const dayRadius = 20;
+                                    const dayCircum = 2 * Math.PI * dayRadius;
+                                    const dayOffset = dayCircum - ((day.progress || 0) / 100) * dayCircum;
 
-                    {!planLoading && dailyPlan.length > 0 && (
-                        <div className={styles.planGrid}>
-                            {dailyPlan.map((day) => {
-                                const isDayCompleted = day.progress === 100;
-                                const dayStrokeColor = isDayCompleted ? "#10b981" : "#0ea5e9";
-                                const dayRadius = 20;
-                                const dayCircum = 2 * Math.PI * dayRadius;
-                                const dayOffset = dayCircum - ((day.progress || 0) / 100) * dayCircum;
+                                    return (
+                                        <div
+                                            key={day.day_number}
+                                            className={`${styles.planCard} ${isDayCompleted ? styles.planCardCompleted : ""}`}
+                                            onClick={() => handleOpenDay(day)}
+                                        >
+                                            <div className={styles.planHeader}>
+                                                <div className={styles.planHeaderLeft}>
+                                                    <h3>Ngày {day.day_number}</h3>
+                                                    <span>{formatDate(day.date)}</span>
+                                                </div>
 
-                                return (
-                                    <div
-                                        key={day.day_number}
-                                        className={`${styles.planCard} ${isDayCompleted ? styles.planCardCompleted : ""}`}
-                                        onClick={() => handleOpenDay(day)}
-                                    >
-                                        <div className={styles.planHeader}>
-                                            <div className={styles.planHeaderLeft}>
-                                                <h3>Ngày {day.day_number}</h3>
-                                                <span>{formatDate(day.date)}</span>
-                                            </div>
-
-                                            {/* VÒNG TRÒN TIẾN ĐỘ CỦA TỪNG NGÀY */}
-                                            <div className={styles.dayProgressWrapper}>
-                                                <svg width="48" height="48" className={styles.circularSvg}>
-                                                    <circle cx="24" cy="24" r={dayRadius} className={styles.bgCircle} style={{ strokeWidth: 4 }} />
-                                                    <circle
-                                                        cx="24" cy="24" r={dayRadius}
-                                                        className={styles.progressCircle}
-                                                        style={{
-                                                            strokeDasharray: dayCircum,
-                                                            strokeDashoffset: dayOffset,
-                                                            stroke: dayStrokeColor,
-                                                            strokeWidth: 4
-                                                        }}
-                                                    />
-                                                </svg>
-                                                <div className={styles.dayProgressText} style={{ color: dayStrokeColor }}>
-                                                    {day.progress || 0}%
+                                                {/* VÒNG TRÒN TIẾN ĐỘ CỦA TỪNG NGÀY */}
+                                                <div className={styles.dayProgressWrapper}>
+                                                    <svg width="48" height="48" className={styles.circularSvg}>
+                                                        <circle cx="24" cy="24" r={dayRadius} className={styles.bgCircle} style={{ strokeWidth: 4 }} />
+                                                        <circle
+                                                            cx="24" cy="24" r={dayRadius}
+                                                            className={styles.progressCircle}
+                                                            style={{
+                                                                strokeDasharray: dayCircum,
+                                                                strokeDashoffset: dayOffset,
+                                                                stroke: dayStrokeColor,
+                                                                strokeWidth: 4
+                                                            }}
+                                                        />
+                                                    </svg>
+                                                    <div className={styles.dayProgressText} style={{ color: dayStrokeColor }}>
+                                                        {day.progress || 0}%
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <p>
-                                            <strong>{day.learned_words || 0} / {day.total_words}</strong> từ đã học
-                                        </p>
-                                        <ul>
-                                            {day.words.slice(0, 5).map((word) => (
-                                                <li key={word.vocabulary_id}>
-                                                    {word.word} - {word.vietnamese_meaning}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        {day.words.length > 5 && (
-                                            <p className={styles.moreText}>
-                                                Và {day.words.length - 5} từ khác...
+                                            <p>
+                                                <strong>{day.learned_words || 0} / {day.total_words}</strong> từ đã học
                                             </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            )}
-        </MainLayout>
+                                            <ul>
+                                                {day.words.slice(0, 5).map((word) => (
+                                                    <li key={word.vocabulary_id}>
+                                                        {word.word} - {word.vietnamese_meaning}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            {day.words.length > 5 && (
+                                                <p className={styles.moreText}>
+                                                    Và {day.words.length - 5} từ khác...
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </MainLayout>
 
-    <ConfirmModal
-      isOpen={confirmModal.isOpen}
-      title={confirmModal.title}
-      message={confirmModal.message}
-      variant={confirmModal.variant}
-      confirmText="Xoá"
-      cancelText="Huỷ"
-      onConfirm={confirmModal.onConfirm}
-      onCancel={closeConfirm}
-    />
-    </>
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+                confirmText="Xoá"
+                cancelText="Huỷ"
+                onConfirm={confirmModal.onConfirm}
+                onCancel={closeConfirm}
+            />
+        </>
     );
 }
 
