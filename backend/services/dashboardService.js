@@ -20,13 +20,13 @@ const getDateRange = (range) => {
 };
 
 const calculateStudyMinutes = (sessions) => {
-  return sessions.reduce((total, session) => {
+  const totalSeconds = sessions.reduce((total, session) => {
     if (!session.start_time || !session.end_time) return total;
     const start = new Date(session.start_time);
     const end = new Date(session.end_time);
-    const minutes = Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000));
-    return total + minutes;
+    return total + (end.getTime() - start.getTime()) / 1000;
   }, 0);
+  return Math.max(0, Math.ceil(totalSeconds / 60));
 };
 
 const calculateStreak = (activeDatesArray) => {
@@ -89,7 +89,10 @@ const getDashboardStatistics = async (account_id, range) => {
 
   const questionResults = await prisma.question_results.findMany({
     where: { session: { account_id: accountId }, answered_at: { gte: startDate, lte: endDate } },
-    include: { question: { include: { vocabulary: true } } },
+    include: {
+      question: { include: { vocabulary: true } },
+      vocabulary: true
+    },
     orderBy: { answered_at: "asc" },
   });
 
@@ -133,8 +136,8 @@ const getDashboardStatistics = async (account_id, range) => {
     if (dailyMap[dateKey]) {
       dailyMap[dateKey].sessions += 1;
       if (session.end_time) {
-        const mins = Math.max(0, Math.round((new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / 60000));
-        dailyMap[dateKey].minutes += mins;
+        const diffSeconds = (new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / 1000;
+        dailyMap[dateKey].minutes += (diffSeconds / 60);
       }
     }
   });
@@ -148,10 +151,14 @@ const getDashboardStatistics = async (account_id, range) => {
     }
   });
 
-  const dailyStats = Object.values(dailyMap);
+  const dailyStats = Object.values(dailyMap).map(item => ({
+    ...item,
+    minutes: Math.ceil(item.minutes) // Làm tròn lên số phút nguyên
+  }));
   const levelMap = { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 };
   questionResults.forEach((result) => {
-    const level = result.question?.vocabulary?.jlpt_level;
+    // Lấy level từ Flashcard (vocabulary) hoặc Quiz (question.vocabulary)
+    const level = result.vocabulary?.jlpt_level || result.question?.vocabulary?.jlpt_level;
     if (level && levelMap[level] !== undefined) levelMap[level] += 1;
   });
 
@@ -220,7 +227,7 @@ const getAdminDashboardStatistics = async (range) => {
     const level = res.question?.vocabulary?.jlpt_level;
     if (level && levelMap[level] !== undefined) levelMap[level] += 1;
   });
-  
+
   // Sắp xếp giảm dần để lấy Top
   const topLevels = Object.keys(levelMap)
     .map(level => ({ level, count: levelMap[level] }))
@@ -238,7 +245,7 @@ const getAdminDashboardStatistics = async (range) => {
   };
 };
 
-module.exports = { 
-  getDashboardStatistics, 
-  getAdminDashboardStatistics, 
+module.exports = {
+  getDashboardStatistics,
+  getAdminDashboardStatistics,
 };

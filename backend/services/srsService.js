@@ -1,7 +1,7 @@
 const vocabularyProgressRepository = require("../repositories/vocabularyProgressRepository");
 const prisma = require("../config/prisma");
 
-// THUẬT TOÁN SM-2 CHUẨN MỰC
+// THUẬT TOÁN SM-2 
 const calculateNextReview = (progress, rating) => {
   let repetition_count = progress?.repetition_count || 0;
   let ease_factor = progress?.ease_factor || 2.5;
@@ -15,6 +15,7 @@ const calculateNextReview = (progress, rating) => {
   else if (rating === 'easy') q = 5;
 
   // 2. Tính số lần lặp và khoảng cách ngày
+  const MAX_INTERVAL_DAYS = 3650; // Tối đa 10 năm, tránh overflow datetime MySQL
   if (q < 3) {
     // Nếu Quên (Again) -> Reset chuỗi
     repetition_count = 0;
@@ -27,6 +28,8 @@ const calculateNextReview = (progress, rating) => {
     else {
       interval_days = Math.round(interval_days * ease_factor);
     }
+    // Giới hạn interval_days tối đa 10 năm
+    if (interval_days > MAX_INTERVAL_DAYS) interval_days = MAX_INTERVAL_DAYS;
   }
 
   // 3. Tính lại hệ số dễ (Ease Factor)
@@ -36,12 +39,16 @@ const calculateNextReview = (progress, rating) => {
   const next_review_at = new Date();
   next_review_at.setDate(next_review_at.getDate() + interval_days);
 
+  // MySQL DATETIME tối đa là 9999-12-31 — giới hạn an toàn
+  const MAX_MYSQL_DATE = new Date('9999-12-31T00:00:00.000Z');
+  const safe_next_review_at = next_review_at > MAX_MYSQL_DATE ? MAX_MYSQL_DATE : next_review_at;
+
   return {
     repetition_count,
     ease_factor,
     interval_days,
     last_reviewed_at: new Date(),
-    next_review_at,
+    next_review_at: safe_next_review_at,
   };
 };
 
@@ -64,46 +71,8 @@ const updateVocabularyProgress = async (account_id, vocabulary_id, rating) => {
 };
 
 const reviewVocabulary = async (account_id, vocabulary_id, rating, session_id) => {
-  // 1. CẬP NHẬT TIẾN ĐỘ SRS
+  //  CẬP NHẬT THUẬT TOÁN SRS
   const progress = await updateVocabularyProgress(account_id, vocabulary_id, rating);
-
-  // 2. LƯU LỊCH SỬ VÀO BẢNG QUESTION_RESULTS
-  if (session_id) {
-    const currentSession = await prisma.study_sessions.findUnique({
-      where: { session_id: Number(session_id) }
-    });
-
-    if (currentSession && currentSession.session_type === 'flashcard') {
-      // FLASHCARD: Tạo mới dòng lịch sử, dùng cột vocabulary_id mới thêm
-      const is_correct = rating === 'good' || rating === 'easy';
-      await prisma.question_results.create({
-        data: {
-          session_id: Number(session_id),
-          vocabulary_id: Number(vocabulary_id),
-          rating: rating,
-          is_correct: is_correct
-        }
-      });
-    } else if (currentSession && currentSession.session_type !== 'flashcard') {
-      // TRẮC NGHIỆM/TỰ LUẬN: Đã được tạo lúc người dùng click chọn đáp án. 
-      // Ở đây chỉ cần Update lại cột `rating` dựa theo thời gian phản xạ.
-      const sampleQuestion = await prisma.questions.findFirst({
-        where: { vocabulary_id: Number(vocabulary_id), question_type: currentSession.session_type }
-      });
-
-      if (sampleQuestion) {
-        await prisma.question_results.updateMany({
-          where: {
-            session_id: Number(session_id),
-            question_id: sampleQuestion.question_id
-          },
-          data: {
-            rating: rating
-          }
-        });
-      }
-    }
-  }
 
   return {
     success: true,

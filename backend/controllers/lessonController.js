@@ -14,7 +14,8 @@ const getLessons = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Loi server!",
+      message: error.message || "Loi server!",
+      error: error.stack,
     });
   }
 };

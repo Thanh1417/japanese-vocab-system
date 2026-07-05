@@ -10,7 +10,7 @@ const createQuestionResult = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Loi server!",
+      message: error.message || "Loi server!",
     });
   }
 };
@@ -27,7 +27,7 @@ const getResultsBySession = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Loi server!",
+      message: error.message || "Loi server!",
     });
   }
 };

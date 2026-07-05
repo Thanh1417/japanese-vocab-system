@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Dịch vụ 1: Database MySQL
+  mysql_db:
+    image: mysql:8.0
+    container_name: vocab_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: japanese_vocab_system
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Dịch vụ 2: Backend Node.js
+  backend_app:
+    image: thanhdev417/japanese-vocab-backend:latest 
+    container_name: vocab_backend
+    restart: always
+    ports:
+      - "5000:3000" # Đổi 5000 thành cổng bạn dùng
+    environment:
+      - DATABASE_URL=mysql://root:${MYSQL_PASSWORD}@mysql_db:3306/japanese_vocab_system
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mysql_db
+
+volumes:
+  mysql_data: 

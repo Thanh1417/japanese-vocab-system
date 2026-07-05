@@ -17,6 +17,7 @@ const findResultsBySessionId = async (session_id) => {
           vocabulary: true,
         },
       },
+      vocabulary: true,
     },
   });
 };
