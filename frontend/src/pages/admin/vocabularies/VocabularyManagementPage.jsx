@@ -120,7 +120,7 @@ function VocabularyManagementPage() {
     const lessonCompare = a.lesson_id - b.lesson_id;
     if (lessonCompare !== 0) return lessonCompare;
 
-    return a.vocabulary_id - b.vocabulary_id;
+    return b.vocabulary_id - a.vocabulary_id;
   });
 
   const totalPages = Math.ceil(sortedVocabularies.length / itemsPerPage);
