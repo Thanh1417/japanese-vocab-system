@@ -114,12 +114,15 @@ function VocabularyManagementPage() {
   const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
 
   const sortedVocabularies = [...filteredVocabularies].sort((a, b) => {
+    // 1. Sắp xếp theo cấp độ JLPT (tăng dần N5 -> N1)
     const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
     if (levelCompare !== 0) return levelCompare;
 
+    // 2. Sắp xếp theo bài học (tăng dần)
     const lessonCompare = a.lesson_id - b.lesson_id;
     if (lessonCompare !== 0) return lessonCompare;
 
+    // 3. Sắp xếp theo ID giảm dần (từ vựng mới nhất thêm vào sẽ có ID lớn nhất)
     return b.vocabulary_id - a.vocabulary_id;
   });
 
