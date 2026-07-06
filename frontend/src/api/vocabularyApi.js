@@ -23,3 +23,7 @@ export const getFlashcardVocabulariesApi = () => {
 export const searchVocabularyApi = (keyword) => {
   return axiosClient.get(`/vocabularies/search?keyword=${keyword}`);
 };
+
+export const bulkImportVocabulariesApi = (data) => {
+  return axiosClient.post("/vocabularies/bulk", { data });
+};

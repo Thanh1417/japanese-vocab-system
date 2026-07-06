@@ -279,20 +279,28 @@ function VocabularyManagementPage() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Reset các trạng thái thông báo trước khi bắt đầu
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
     const reader = new FileReader();
+    
     reader.onload = async (event) => {
       try {
-        setLoading(true);
         const workbook = XLSX.read(event.target.result, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
-        // Chuyển Excel thành mảng JSON
         const rawData = XLSX.utils.sheet_to_json(sheet);
 
-        // Cần đảm bảo file Excel có các cột chuẩn: LessonID, Word, Reading, Kanji, Meaning, JLPT
+        // Kiểm tra xem file có dữ liệu không
+        if (rawData.length === 0) {
+          throw new Error("File Excel không có dữ liệu.");
+        }
+
         const formattedData = rawData.map((row) => ({
-          lesson_id: Number(row.LessonID),
+          lesson_id: parseInt(row.LessonID),
           word: row.Word,
           reading: row.Reading || "",
           kanji_meaning: row.Kanji || "",
@@ -300,13 +308,19 @@ function VocabularyManagementPage() {
           jlpt_level: row.JLPT || "N5"
         }));
 
-        // GỌI API IMPORT TẠI ĐÂY (Bạn cần cấu hình endpoint này ở backend)
-        // await axios.post("/api/vocabularies/bulk", { data: formattedData });
+        // GỌI API: Sử dụng axiosClient (đảm bảo bạn đã import axiosClient)
+        // Lưu ý: Đảm bảo route '/vocabularies/bulk' đã được khai báo ở Backend
+        const response = await axiosClient.post("/vocabularies/bulk", { data: formattedData });
 
-        setSuccess(`Import thành công ${formattedData.length} từ vựng!`);
+        // Nếu thành công, hiển thị thông báo từ server trả về
+        setSuccess(response.data.message || `Import thành công ${formattedData.length} từ vựng!`);
+        
+        // Tải lại danh sách từ vựng từ database
         fetchData();
+        
       } catch (err) {
-        setError("Lỗi import file. Vui lòng kiểm tra lại định dạng Excel.");
+        console.error("Import error:", err);
+        setError(err.response?.data?.message || "Lỗi import file. Vui lòng kiểm tra lại định dạng các cột (LessonID, Word, Meaning, v.v.) trong file Excel.");
       } finally {
         setLoading(false);
         if (fileInputRef.current) {
@@ -314,6 +328,12 @@ function VocabularyManagementPage() {
         }
       }
     };
+
+    reader.onerror = () => {
+      setLoading(false);
+      setError("Không thể đọc file.");
+    };
+
     reader.readAsBinaryString(file);
   };
 

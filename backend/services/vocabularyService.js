@@ -1,4 +1,5 @@
 const vocabularyRepository = require("../repositories/vocabularyRepository");
+const prisma = require("../config/prisma");
 
 const getAllVocabularies = async () => {
   const vocabularies = await vocabularyRepository.findAllVocabularies();

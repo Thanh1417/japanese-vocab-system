@@ -43,4 +43,6 @@ router.delete(
   vocabularyController.deleteVocabulary
 );
 
+router.post("/bulk", verifyToken, checkRole("admin"), vocabularyController.bulkImport);
+
 module.exports = router;

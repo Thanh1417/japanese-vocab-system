@@ -111,6 +111,18 @@ const searchVocabulary = async (req, res) => {
   }
 };
 
+const bulkImport = async (req, res) => {
+  try {
+    const { data } = req.body; // Lấy dữ liệu từ Frontend gửi lên
+    console.log("Data received:", data);
+    const result = await vocabularyService.bulkCreateVocabularies(data);
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    console.error("Lỗi chi tiết:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server!" });
+  }
+};
+
 module.exports = {
   getVocabularies,
   getVocabularyDetail,
@@ -119,4 +131,5 @@ module.exports = {
   updateVocabulary,
   deleteVocabulary,
   searchVocabulary,
+  bulkImport,
 };
