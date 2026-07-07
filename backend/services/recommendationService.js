@@ -81,13 +81,12 @@ const getRecommendations = async (account_id) => {
     account_id
   );
 
-  // ĐÃ SỬA LẠI ĐOẠN NÀY ĐỂ BẮT LỖI NULL
   const wrongVocabularies = wrongResults
     .map((item) => {
       // Thông minh: Lấy từ vựng từ Flashcard (item.vocabulary) HOẶC từ Quiz (item.question.vocabulary)
       const vocab = item.vocabulary || item.question?.vocabulary;
 
-      if (!vocab) return null; // An toàn tuyệt đối
+      if (!vocab) return null; 
 
       return {
         ...vocab,

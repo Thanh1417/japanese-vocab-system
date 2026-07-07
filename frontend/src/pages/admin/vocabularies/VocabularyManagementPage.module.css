@@ -335,6 +335,17 @@
   overflow: visible;
 }
 
+.importModalContent {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  width: 100%;
+  max-width: 620px;
+  border-radius: 20px;
+  box-shadow: 0 24px 45px rgba(15, 23, 42, 0.18);
+  padding: 30px;
+  animation: modalIn 0.3s ease-out;
+  border: 1px solid #e2e8f0;
+}
+
 @keyframes modalIn {
   from {
     transform: translateY(-20px) scale(0.95);
@@ -371,6 +382,65 @@
 
 .closeModalBtn:hover {
   color: #ef4444;
+}
+
+.importGuideBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+
+.importGuideBox h3 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.importGuideBox ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.importActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.downloadTemplateButton,
+.uploadExcelButton {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.downloadTemplateButton {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.downloadTemplateButton:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.uploadExcelButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+}
+
+.uploadExcelButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(16, 185, 129, 0.25);
 }
 
 .formGrid {
@@ -508,4 +578,16 @@
 .suggMeaning {
   font-size: 13px;
   color: #64748b;
+}
+
+.importErrorBox {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #b91c1c;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
 }

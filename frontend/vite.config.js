@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/backend-api': {
         target: 'http://168.144.137.25:5000/api',
-        // target: 'http://localhost:3000/api',  // ← đổi sang local
+        // target: 'http://localhost:5001/api',  // ← đổi sang local
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/backend-api/, '')
       }

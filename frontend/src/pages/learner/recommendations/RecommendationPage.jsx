@@ -39,7 +39,7 @@ function RecommendationPage() {
     return "Thấp";
   };
 
-  // Giữ nguyên luồng chuyển trang của bạn
+  // luồng chuyển trang
   const handleGoFlashcard = () => {
     navigate("/quiz?source=recommendation&mode=flashcard");
   };

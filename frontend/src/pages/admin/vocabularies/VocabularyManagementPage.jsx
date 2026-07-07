@@ -8,6 +8,7 @@ import {
   getAllVocabulariesApi,
   updateVocabularyApi,
   searchVocabularyApi,
+  bulkImportVocabulariesApi,
 } from "../../../api/vocabularyApi";
 
 import { getAllLessonsApi } from "../../../api/lessonApi";
@@ -27,6 +28,7 @@ function VocabularyManagementPage() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [importError, setImportError] = useState("");
 
   // Phân trang & Lọc
   const [keyword, setKeyword] = useState("");
@@ -37,6 +39,7 @@ function VocabularyManagementPage() {
 
   // Trạng thái Modal (Popup)
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -114,15 +117,7 @@ function VocabularyManagementPage() {
   const jlptOrder = { N5: 1, N4: 2, N3: 3, N2: 4, N1: 5 };
 
   const sortedVocabularies = [...filteredVocabularies].sort((a, b) => {
-    // 1. Sắp xếp theo cấp độ JLPT (tăng dần N5 -> N1)
-    const levelCompare = jlptOrder[a.jlpt_level] - jlptOrder[b.jlpt_level];
-    if (levelCompare !== 0) return levelCompare;
-
-    // 2. Sắp xếp theo bài học (tăng dần)
-    const lessonCompare = a.lesson_id - b.lesson_id;
-    if (lessonCompare !== 0) return lessonCompare;
-
-    // 3. Sắp xếp theo ID giảm dần (từ vựng mới nhất thêm vào sẽ có ID lớn nhất)
+    // Sắp xếp theo ID giảm dần để các từ vựng vừa thêm sẽ luôn hiển thị ở trên cùng
     return b.vocabulary_id - a.vocabulary_id;
   });
 
@@ -181,6 +176,20 @@ function VocabularyManagementPage() {
     setError("");
     setSuccess("");
     setShowSuggestions(false);
+  };
+
+  const openImportModal = () => {
+    setIsImportModalOpen(true);
+    setError("");
+    setSuccess("");
+    setImportError("");
+  };
+
+  const closeImportModal = () => {
+    setIsImportModalOpen(false);
+    setError("");
+    setSuccess("");
+    setImportError("");
   };
 
   // Xử lý thay đổi input thông thường
@@ -274,64 +283,126 @@ function VocabularyManagementPage() {
     );
   };
 
+  const extractExcelValue = (row, keys) => {
+    for (const key of keys) {
+      const value = row[key];
+      if (value !== undefined && value !== null && String(value).trim() !== "") {
+        return String(value).trim();
+      }
+    }
+    return "";
+  };
+
   // Xử lý upload và phân tích file Excel
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        lesson_name: "Từ vựng N1",
+        word: "構築",
+        reading: "こうちく",
+        kanji_meaning: "CẤU TRÚC",
+        vietnamese_meaning: "xây dựng",
+        jlpt_level: "N1",
+      },
+      {
+        lesson_name: "Từ vựng N1",
+        word: "検証",
+        reading: "けんしょう",
+        kanji_meaning: "KIỂM CHỨNG",
+        vietnamese_meaning: "kiểm chứng",
+        jlpt_level: "N1",
+      },
+      {
+        lesson_name: "Từ vựng N1",
+        word: "抽象",
+        reading: "ちゅうしょう",
+        kanji_meaning: "TRỪU TƯỢNG",
+        vietnamese_meaning: "trừu tượng",
+        jlpt_level: "N1",
+      },
+      {
+        lesson_name: "Từ vựng N1",
+        word: "開発",
+        reading: "かいはつ",
+        kanji_meaning: "PHÁT TRIỂN",
+        vietnamese_meaning: "phát triển",
+        jlpt_level: "N1",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, "vocabulary_import_template.xlsx");
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Reset các trạng thái thông báo trước khi bắt đầu
     setError("");
     setSuccess("");
+    setImportError("");
     setLoading(true);
 
     const reader = new FileReader();
-    
+
     reader.onload = async (event) => {
       try {
         const workbook = XLSX.read(event.target.result, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
-        const rawData = XLSX.utils.sheet_to_json(sheet);
+        const rawData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-        // Kiểm tra xem file có dữ liệu không
         if (rawData.length === 0) {
           throw new Error("File Excel không có dữ liệu.");
         }
 
-        const formattedData = rawData.map((row) => ({
-          lesson_id: parseInt(row.LessonID),
-          word: row.Word,
-          reading: row.Reading || "",
-          kanji_meaning: row.Kanji || "",
-          vietnamese_meaning: row.Meaning,
-          jlpt_level: row.JLPT || "N5"
-        }));
+        const formattedData = rawData
+          .filter((row) => extractExcelValue(row, ["word", "Word", "vocabulary", "Từ vựng", "kanji", "Kanji"]))
+          .map((row) => ({
+            lesson_name: extractExcelValue(row, ["lesson_name", "lessonName", "lesson", "LessonName", "Lesson", "Bài học", "bài học"]),
+            word: extractExcelValue(row, ["word", "Word", "vocabulary", "Từ vựng", "kanji", "Kanji"]),
+            reading: extractExcelValue(row, ["reading", "Reading", "furigana", "cách đọc", "Cách đọc"]),
+            kanji_meaning: extractExcelValue(row, ["kanji_meaning", "kanjiMeaning", "kanji", "Kanji", "Hán tự", "hán tự"]),
+            vietnamese_meaning: extractExcelValue(row, ["vietnamese_meaning", "vietnameseMeaning", "meaning", "Meaning", "Nghĩa", "nghĩa"]),
+            jlpt_level: extractExcelValue(row, ["jlpt_level", "jlpt", "JLPT", "level", "Level"]) || "N5",
+          }));
 
-        // GỌI API: Sử dụng axiosClient (đảm bảo bạn đã import axiosClient)
-        // Lưu ý: Đảm bảo route '/vocabularies/bulk' đã được khai báo ở Backend
-        const response = await axiosClient.post("/vocabularies/bulk", { data: formattedData });
+        if (formattedData.length === 0) {
+          throw new Error("Không tìm thấy dữ liệu từ vựng hợp lệ trong file.");
+        }
 
-        // Nếu thành công, hiển thị thông báo từ server trả về
-        setSuccess(response.data.message || `Import thành công ${formattedData.length} từ vựng!`);
-        
-        // Tải lại danh sách từ vựng từ database
-        fetchData();
-        
+        const response = await bulkImportVocabulariesApi(formattedData);
+
+        const resultData = response.data?.data || response.data;
+        if (resultData && resultData.errorCount > 0) {
+          let errMsg = `Đã import thành công ${resultData.importedCount} từ vựng. Tuy nhiên có ${resultData.errorCount} dòng bị lỗi:\n`;
+          resultData.errors.forEach((err) => {
+            errMsg += `• Dòng ${err.row}: ${err.message}\n`;
+          });
+          setImportError(errMsg);
+          fetchData();
+        } else {
+          setSuccess(response.data.message || `Import thành công ${formattedData.length} từ vựng!`);
+          closeImportModal();
+          fetchData();
+        }
       } catch (err) {
         console.error("Import error:", err);
-        setError(err.response?.data?.message || "Lỗi import file. Vui lòng kiểm tra lại định dạng các cột (LessonID, Word, Meaning, v.v.) trong file Excel.");
+        setImportError(err.response?.data?.message || err.message || "Lỗi import file. Vui lòng kiểm tra lại định dạng cột trong file Excel.");
       } finally {
         setLoading(false);
         if (fileInputRef.current) {
-          fileInputRef.current.value = ""; // Reset giá trị của input file
+          fileInputRef.current.value = "";
         }
       }
     };
 
     reader.onerror = () => {
       setLoading(false);
-      setError("Không thể đọc file.");
+      setImportError("Không thể đọc file.");
     };
 
     reader.readAsBinaryString(file);
@@ -382,7 +453,7 @@ function VocabularyManagementPage() {
           />
           <button
             className={styles.importButton}
-            onClick={() => fileInputRef.current.click()}
+            onClick={openImportModal}
           >
             Nhập từ Excel
           </button>
@@ -505,6 +576,40 @@ function VocabularyManagementPage() {
             </button>
           </div>
         </>
+      )}
+
+      {isImportModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.importModalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Nhập từ vựng từ Excel</h2>
+              <button className={styles.closeModalBtn} onClick={closeImportModal}>&times;</button>
+            </div>
+
+            <div className={styles.importGuideBox}>
+              <h3>Hướng dẫn</h3>
+              <ul>
+                <li>File Excel cần có các cột: <strong>lesson_name</strong>, <strong>word</strong>, <strong>reading</strong>, <strong>kanji_meaning</strong>, <strong>vietnamese_meaning</strong>, <strong>jlpt_level</strong>.</li>
+                <li>Tên bài học (<strong>lesson_name</strong>) trong Excel phải trùng khớp với tên bài học hiện có trên hệ thống (ví dụ: <strong>Bài 1</strong>, <strong>Bài 2</strong>, ..., <strong>Từ vựng N1</strong>). Nếu không khớp, từ vựng dòng đó sẽ bị báo lỗi và bỏ qua.</li>
+              </ul>
+            </div>
+
+            {importError && (
+              <div className={styles.importErrorBox}>
+                {importError}
+              </div>
+            )}
+
+            <div className={styles.importActions}>
+              <button className={styles.downloadTemplateButton} onClick={handleDownloadTemplate}>
+                Tải file mẫu
+              </button>
+              <button className={styles.uploadExcelButton} onClick={() => fileInputRef.current?.click()}>
+                Nhập từ Excel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* POPUP MODAL THÊM/SỬA TỪ VỰNG */}
